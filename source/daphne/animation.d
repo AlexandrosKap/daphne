@@ -1,9 +1,12 @@
-// License: MIT | See LICENSE file in repo.
+// Copyright (c) 2023 Alexandros F. G. Kapretsos
+// Distributed under the MIT License, see LICENSE file.
 
 module daphne.animation;
 
 import std.math;
-import daphne.config;
+
+alias Num = float;
+alias EasingFunc = Num function(Num x) pure nothrow @nogc @safe;
 
 pure nothrow @nogc @safe {
     // TODO: Add more easing functions.
@@ -14,7 +17,11 @@ pure nothrow @nogc @safe {
     }
 
     Num lerp(Num a, Num b, Num weight) {
-        return ease(a, b, weight, &linear);
+        return ease(a, b, weight, &easeLinear);
+    }
+
+    Num easeLinear(Num x) {
+        return x;
     }
 
     Num easeInSine(Num x) {
@@ -34,7 +41,7 @@ struct Frame {
 pure nothrow @nogc @safe:
     Num value = 0;
     Num time = 0;
-    EasingFunc f = &linear;
+    EasingFunc f = &easeLinear;
 
     this(Num value, Num time, EasingFunc f) {
         this.value = value;
@@ -43,17 +50,18 @@ pure nothrow @nogc @safe:
     }
 
     this(Num value, Num time) {
-        this(value, time, &linear);
+        this(value, time, &easeLinear);
     }
 }
 
+// NOTE: Maybe add index to optimize updating.
 struct Animation {
-pure nothrow @safe:
+pure nothrow @nogc @safe:
     Frame[] frames;
     Num time = 0;
 
-    this(size_t length) {
-        this.frames = new Frame[length];
+    this(Frame[] frames) {
+        this.frames = frames;
     }
 
     size_t length() {
@@ -86,9 +94,9 @@ pure nothrow @safe:
         } else {
             foreach (i; 0 .. length) {
                 if (frames[i].time > time) {
-                    auto a = frames[i - 1];
-                    auto b = frames[i];
-                    auto weight = (time - a.time) / (b.time - a.time);
+                    Frame a = frames[i - 1];
+                    Frame b = frames[i];
+                    Num weight = (time - a.time) / (b.time - a.time);
                     return ease(a.value, b.value, weight, a.f);
                 }
             }
@@ -118,19 +126,24 @@ pure nothrow @safe:
 
     void updateAndLoop(Num amount) {
         time += amount;
-        while (time < start) {
+        if (time < start) {
             time += end;
-        }
-        while (time > end) {
+        } else if (time > end) {
             time -= end;
+        }
+    }
+
+    void makeEnd(size_t index) {
+        Frame f = frames[index];
+        foreach (i; index + 1 .. length) {
+            frames[i] = f;
         }
     }
 }
 
 unittest {
-    auto anim = Animation(2);
-    anim.frames[0] = Frame(15, 1, &easeInOutSine);
-    anim.frames[1] = Frame(30, 2);
+    Frame[2] frames = [Frame(15, 1), Frame(30, 2)];
+    Animation anim = Animation(frames);
 
     assert(anim.time == 0);
     assert(anim.start == 1);

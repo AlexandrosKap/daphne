@@ -6,7 +6,5 @@
 	"description": "A game development library for the D programming language.",
 	"license": "MIT",
 	"name": "daphne",
-	"targetType": "library",
-	"sourcePaths": ["daphne"],
-	"importPaths": ["daphne"]
+	"targetType": "library"
 }

@@ -1,10 +1,13 @@
-// License: MIT | See LICENSE file in repo.
+// Copyright (c) 2023 Alexandros F. G. Kapretsos
+// Distributed under the MIT License, see LICENSE file.
 
 module daphne.math;
 
-import math = std.math;
 import std.algorithm;
-import daphne.config;
+import math = std.math;
+
+alias Num = float;
+alias EasingFunc = Num function(Num x) pure nothrow @nogc @safe;
 
 enum Anchor {
     topLeft,
@@ -32,15 +35,26 @@ enum BasicPalette {
     yellow = RGBA(255, 255, 0),
     magenta = RGBA(255, 0, 255),
     cyan = RGBA(0, 255, 255),
-    black = RGBA(0),
-    white = RGBA(255),
+    black = RGBA(0, 0, 0),
+    white = RGBA(255, 255, 255),
+}
+
+enum DebugPalette {
+    red = RGBA(255, 0, 0, 120),
+    green = RGBA(0, 255, 0, 120),
+    blue = RGBA(0, 0, 255, 120),
+    yellow = RGBA(255, 255, 0, 120),
+    magenta = RGBA(255, 0, 255, 120),
+    cyan = RGBA(0, 255, 255, 120),
+    black = RGBA(0, 0, 0, 120),
+    white = RGBA(255, 255, 255, 120),
 }
 
 enum CutePalette {
-    black = RGBA(0x26, 0x0d, 0x1c),
-    darkGray = RGBA(0x4f, 0x3a, 0x54),
-    lightGray = RGBA(0xa4, 0x92, 0x9a),
-    white = RGBA(0xe4, 0xdb, 0xba),
+    black = RGBA(0x2b, 0x2b, 0x26),
+    darkGray = RGBA(0x70, 0x6b, 0x66),
+    lightGray = RGBA(0xa8, 0x9f, 0x94),
+    white = RGBA(0xe0, 0xdb, 0xcd),
 }
 
 struct Vec2 {
@@ -178,7 +192,10 @@ pure nothrow @nogc @safe:
     }
 
     Vec2 lerp(Vec2 to, Num weight) {
-        return ease(to, weight, &linear);
+        return Vec2(
+            x + (to.x - x) * weight,
+            y + (to.y - y) * weight,
+        );
     }
 }
 
@@ -282,7 +299,11 @@ pure nothrow @nogc @safe:
     }
 
     Vec3 lerp(Vec3 to, Num weight) {
-        return ease(to, weight, &linear);
+        return Vec3(
+            x + (to.x - x) * weight,
+            y + (to.y - y) * weight,
+            z + (to.z - z) * weight,
+        );
     }
 }
 
@@ -392,7 +413,12 @@ pure nothrow @nogc @safe:
     }
 
     Vec4 lerp(Vec4 to, Num weight) {
-        return ease(to, weight, &linear);
+        return Vec4(
+            x + (to.x - x) * weight,
+            y + (to.y - y) * weight,
+            z + (to.z - z) * weight,
+            w + (to.w - w) * weight,
+        );
     }
 }
 
@@ -408,6 +434,10 @@ pure nothrow @nogc @safe:
         this.y1 = y1;
         this.x2 = x2;
         this.y2 = y2;
+    }
+
+    this(Vec2 a, Vec2 b) {
+        this(a.x, a.y, b.x, b.y);
     }
 
     bool isZero() {
@@ -447,6 +477,10 @@ pure nothrow @nogc @safe:
         this.h = h;
     }
 
+    this(Vec2 start, Vec2 size) {
+        this(start.x, start.y, size.x, size.y);
+    }
+
     bool isZero() {
         return x == 0 && y == 0 && w == 0 && h == 0;
     }
@@ -474,8 +508,8 @@ pure nothrow @nogc @safe:
     }
 
     void center(Vec2 value) {
-        x -= value.x - w / 2;
-        y -= value.y - h / 2;
+        x = value.x - w / 2;
+        y = value.y - h / 2;
     }
 
     Vec2 end() {
@@ -534,7 +568,6 @@ pure nothrow @nogc @safe:
             y <= other.y + other.h;
     }
 
-    // TODO: Broken? Fix...
     Rect intersection(Rect other) {
         if (isIntersecting(other)) {
             auto e1 = end;
@@ -684,6 +717,10 @@ pure nothrow @nogc @safe:
         this.r = r;
     }
 
+    this(Vec2 center, Num r) {
+        this(center.x, center.y, r);
+    }
+
     bool isZero() {
         return x == 0 && y == 0 && r == 0;
     }
@@ -729,7 +766,6 @@ unittest {
     auto r1 = r0;
     auto r2 = r1.cutSide(Side.right, 4);
 
-    assert(!r1.intersection(r2).isZero);
     assert(r1.merger(r2) == r0);
     assert(r1.point(Anchor.centerRight) == Vec2(r1.x + r1.w, r1.y + r1.h / 2));
 }

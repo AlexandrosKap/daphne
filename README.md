@@ -1,19 +1,20 @@
-# Daphne (WIP)
+# 🦆 Daphne (WIP)
 
 A game development library for the D programming language.
 
 The library is designed to be simple and easy to understand.
-This means that most of the library avoids using things that tend to make it difficult to read code.
-Things like templates and other compile-time features are utilized as little as possible.
+This means that the modules in the library are self-contained
+and that things like templates and other compile-time features are used as little as possible.
+For example, you can simply copy-paste the animation module into your project and start programming.
 
-## Modules
+## 📚 Modules
 
 * daphne.animation
 * daphne.dialogue
 * daphne.entity
 * daphne.math
 
-## Examples
+## 📝 Examples
 
 ### Math Module
 
@@ -25,7 +26,6 @@ void main() {
     auto r1 = r0;
     auto r2 = r1.cutSide(Side.right, 4);
 
-    assert(!r1.intersection(r2).isZero);
     assert(r1.merger(r2) == r0);
     assert(r1.point(Anchor.centerRight) == Vec2(r1.x + r1.w, r1.y + r1.h / 2));
 }
@@ -37,14 +37,13 @@ void main() {
 import daphne.animation;
 
 void main() {
-    auto anim = Animation(2);
-    anim.frames[0] = Frame(15, 1, &easeInOutSine);
-    anim.frames[1] = Frame(30, 2);
+    Frame[2] frames = [Frame(15, 1), Frame(30, 2)];
+    Animation anim = Animation(frames);
 
     assert(anim.time == 0);
     assert(anim.start == 1);
     assert(anim.value == 15);
-    
+
     anim.jumpToStart();
     foreach (i; 0 .. 5) {
         anim.update(0.25);
@@ -59,11 +58,11 @@ void main() {
 ```d
 import daphne.entity;
 
-struct Cat {
-    int age;
-}
-
 void main() {
+    struct Cat {
+        int age;
+    }
+
     auto group = EntityGroup!Cat(4);
     group.append(Cat(3));
     group.append(Cat(7));
@@ -80,7 +79,7 @@ void main() {
 }
 ```
 
-## License
+## 📌 License
 
 The project is released under the terms of the MIT License.
 Please refer to the LICENSE file.

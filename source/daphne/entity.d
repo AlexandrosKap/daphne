@@ -1,4 +1,5 @@
-// License: MIT | See LICENSE file in repo.
+// Copyright (c) 2023 Alexandros F. G. Kapretsos
+// Distributed under the MIT License, see LICENSE file.
 
 module daphne.entity;
 
