@@ -6,14 +6,17 @@ module daphne.entity;
 alias Entity = size_t;
 
 struct EntityGroup(T) {
-pure nothrow @safe:
+pure nothrow @nogc @safe:
     T[] components;
     bool[] states;
     Entity last;
 
-    this(size_t length) {
-        this.components = new T[length];
-        this.states = new bool[length];
+    this(T[] components, bool[] states) {
+        if (components.length != states.length) {
+            assert(0, "the number of components must be equal to the number of states");
+        }
+        this.components = components;
+        this.states = states;
     }
 
     size_t length() {
@@ -122,7 +125,7 @@ unittest {
         int age;
     }
 
-    auto group = EntityGroup!Cat(4);
+    auto group = EntityGroup!Cat(new Cat[4], new bool[4]);
     group.append(Cat(3));
     group.append(Cat(7));
 

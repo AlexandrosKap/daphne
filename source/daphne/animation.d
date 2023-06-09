@@ -17,7 +17,7 @@ pure nothrow @nogc @safe {
     }
 
     Num lerp(Num a, Num b, Num weight) {
-        return ease(a, b, weight, &easeLinear);
+        return a + (b - a) * weight;
     }
 
     Num easeLinear(Num x) {
@@ -34,6 +34,38 @@ pure nothrow @nogc @safe {
 
     Num easeInOutSine(Num x) {
         return -(cos(PI * x) - 1) / 2;
+    }
+
+    Num easeInQuad(Num x) {
+        return x * x;
+    }
+
+    Num easeOutQuad(Num x) {
+        return 1 - (1 - x) * (1 - x);
+    }
+
+    Num easeInOutQuad(Num x) {
+        if (x < 0.5) {
+            return 2 * x * x;
+        } else {
+            return 1 - pow(-2 * x + 2, 2) / 2;
+        }
+    }
+
+    Num easeInCubic(Num x) {
+        return x * x * x;
+    }
+
+    Num easeOutCubic(Num x) {
+        return 1 - pow(1 - x, 3);
+    }
+
+    Num easeInOutCubic(Num x) {
+        if (x < 0.5) {
+            return 4 * x * x * x;
+        } else {
+            return 1 - pow(-2 * x + 2, 3) / 2;
+        }
     }
 }
 
@@ -147,6 +179,7 @@ unittest {
 
     assert(anim.time == 0);
     assert(anim.start == 1);
+    assert(anim.end == 2);
     assert(anim.value == 15);
 
     anim.jumpToStart();

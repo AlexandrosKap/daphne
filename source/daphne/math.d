@@ -40,14 +40,14 @@ enum BasicPalette {
 }
 
 enum DebugPalette {
-    red = RGBA(255, 0, 0, 120),
-    green = RGBA(0, 255, 0, 120),
-    blue = RGBA(0, 0, 255, 120),
-    yellow = RGBA(255, 255, 0, 120),
-    magenta = RGBA(255, 0, 255, 120),
-    cyan = RGBA(0, 255, 255, 120),
-    black = RGBA(0, 0, 0, 120),
-    white = RGBA(255, 255, 255, 120),
+    red = RGBA(255, 0, 0, 80),
+    green = RGBA(0, 255, 0, 80),
+    blue = RGBA(0, 0, 255, 80),
+    yellow = RGBA(255, 255, 0, 80),
+    magenta = RGBA(255, 0, 255, 80),
+    cyan = RGBA(0, 255, 255, 80),
+    black = RGBA(0, 0, 0, 80),
+    white = RGBA(255, 255, 255, 80),
 }
 
 enum CutePalette {
@@ -693,15 +693,104 @@ pure nothrow @nogc @safe:
         }
     }
 
-    void extend(Num amount) {
+    void extendLeft(Num amount) {
         x -= amount;
-        y -= amount;
         w += amount;
+    }
+
+    void extendRight(Num amount) {
+        w += amount;
+    }
+
+    void extendTop(Num amount) {
+        y -= amount;
         h += amount;
     }
 
+    void extendBottom(Num amount) {
+        h += amount;
+    }
+
+    void extendSide(Side from, Num amount) {
+        final switch (from) {
+        case Side.left:
+            extendLeft(amount);
+            break;
+        case Side.right:
+            extendRight(amount);
+            break;
+        case Side.top:
+            extendTop(amount);
+            break;
+        case Side.bottom:
+            extendBottom(amount);
+            break;
+        }
+    }
+
+    void extendLeftRight(Num amount) {
+        extendLeft(amount);
+        extendRight(amount);
+    }
+
+    void extendTopBottom(Num amount) {
+        extendTop(amount);
+        extendBottom(amount);
+    }
+
+    void extend(Num amount) {
+        extendLeftRight(amount);
+        extendTopBottom(amount);
+    }
+
+    void contractLeft(Num amount) {
+        x += amount;
+        w -= amount;
+    }
+
+    void contractRight(Num amount) {
+        w -= amount;
+    }
+
+    void contractTop(Num amount) {
+        y += amount;
+        h -= amount;
+    }
+
+    void contractBottom(Num amount) {
+        h -= amount;
+    }
+
+    void contractSide(Side from, Num amount) {
+        final switch (from) {
+        case Side.left:
+            contractLeft(amount);
+            break;
+        case Side.right:
+            contractRight(amount);
+            break;
+        case Side.top:
+            contractTop(amount);
+            break;
+        case Side.bottom:
+            contractBottom(amount);
+            break;
+        }
+    }
+
+    void contractLeftRight(Num amount) {
+        contractLeft(amount);
+        contractRight(amount);
+    }
+
+    void contractTopBottom(Num amount) {
+        contractTop(amount);
+        contractBottom(amount);
+    }
+
     void contract(Num amount) {
-        extend(-amount);
+        contractLeftRight(amount);
+        contractTopBottom(amount);
     }
 }
 

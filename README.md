@@ -42,6 +42,7 @@ void main() {
 
     assert(anim.time == 0);
     assert(anim.start == 1);
+    assert(anim.end == 2);
     assert(anim.value == 15);
 
     anim.jumpToStart();
@@ -63,7 +64,7 @@ void main() {
         int age;
     }
 
-    auto group = EntityGroup!Cat(4);
+    auto group = EntityGroup!Cat(new Cat[4], new bool[4]);
     group.append(Cat(3));
     group.append(Cat(7));
 

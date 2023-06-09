@@ -3,60 +3,29 @@
 
 module daphne.dialogue;
 
-enum ActorState {
-    neutral,
-    happy,
-    angry,
-    sad,
-    nervous,
-    serious,
-    uncomfortable,
-    unimpressed,
-    annoyed,
-    confused,
-    concerned,
-    disheartened,
-    shocked,
-    surprised,
-    exhausted,
-    worried,
-    talking,
-    thinking,
-    explaining,
-    blushing,
-    smiling,
-    smirking,
-    laughing,
-}
-
-enum ActorPosition {
-    center,
-    left,
-    right,
-    farLeft,
-    farRight,
-}
-
 // TODO: Think about it more...
-struct Line {
+struct Line(T) {
 pure nothrow @nogc @safe:
     string content;
-    string actor;
-    ActorState state;
-    ActorPosition position;
+    T info;
 
     this(string content) {
         this.content = content;
     }
+
+    this(string content, T info) {
+        this.content = content;
+        this.info = info;
+    }
 }
 
 // TODO: Need to add a lot of things.
-struct Dialogue {
+struct Dialogue(T) {
 pure nothrow @nogc @safe:
-    Line[] lines;
+    Line!T[] lines;
     size_t index;
 
-    this(Line[] lines) {
+    this(Line!T[] lines) {
         this.lines = lines;
     }
 
@@ -67,6 +36,6 @@ pure nothrow @nogc @safe:
 
 // TODO: Need to add something here.
 unittest {
-    Line[2] lines = [Line("Hello..."), Line("World!")];
-    Dialogue d = Dialogue(lines);
+    Line!int[2] lines = [Line!int("Hello..."), Line!int("World!")];
+    auto d = Dialogue!int(lines);
 }
