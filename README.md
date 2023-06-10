@@ -62,21 +62,27 @@ import daphne.entity;
 void main() {
     struct Cat {
         int age;
+        bool isActive;
     }
 
-    auto group = EntityGroup!Cat(new Cat[4], new bool[4]);
+    auto group = EntityGroup!Cat(new Cat[4]);
+    assert(group.length == 4);
+
+    assert(group.entityCount == 0);
     group.append(Cat(3));
     group.append(Cat(7));
-
-    assert(group.length == 4);
     assert(group.entityCount == 2);
+
     foreach (entity; group.entities) {
         auto cat = group.get(entity);
         cat.age += 1;
-        if (cat.age > 12) {
+        if (cat.age > 7) {
             group.remove(entity);
         }
     }
+    assert(group.entityCount == 1);
+    group.clear();
+    assert(group.isEmpty);
 }
 ```
 

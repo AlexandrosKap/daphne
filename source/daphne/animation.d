@@ -67,6 +67,38 @@ pure nothrow @nogc @safe {
             return 1 - pow(-2 * x + 2, 3) / 2;
         }
     }
+
+    Num easeInQuart(Num x) {
+        return x * x * x * x;
+    }
+
+    Num easeOutQuart(Num x) {
+        return 1 - pow(1 - x, 4);
+    }
+
+    Num easeInOutQuart(Num x) {
+        if (x < 0.5) {
+            return 8 * x * x * x * x;
+        } else {
+            return 1 - pow(-2 * x + 2, 4) / 2;
+        }
+    }
+
+    Num easeInQuint(Num x) {
+        return x * x * x * x * x;
+    }
+
+    Num easeOutQuint(Num x) {
+        return 1 - pow(1 - x, 5);
+    }
+
+    Num easeInOutQuint(Num x) {
+        if (x < 0.5) {
+            return 16 * x * x * x * x * x;
+        } else {
+            return 1 - pow(-2 * x + 2, 5) / 2;
+        }
+    }
 }
 
 struct Frame {

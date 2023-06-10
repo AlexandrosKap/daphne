@@ -40,14 +40,14 @@ enum BasicPalette {
 }
 
 enum DebugPalette {
-    red = RGBA(255, 0, 0, 80),
-    green = RGBA(0, 255, 0, 80),
-    blue = RGBA(0, 0, 255, 80),
-    yellow = RGBA(255, 255, 0, 80),
-    magenta = RGBA(255, 0, 255, 80),
-    cyan = RGBA(0, 255, 255, 80),
-    black = RGBA(0, 0, 0, 80),
-    white = RGBA(255, 255, 255, 80),
+    red = RGBA(255, 0, 0, 100),
+    green = RGBA(0, 255, 0, 100),
+    blue = RGBA(0, 0, 255, 100),
+    yellow = RGBA(255, 255, 0, 100),
+    magenta = RGBA(255, 0, 255, 100),
+    cyan = RGBA(0, 255, 255, 100),
+    black = RGBA(0, 0, 0, 100),
+    white = RGBA(255, 255, 255, 100),
 }
 
 enum CutePalette {
