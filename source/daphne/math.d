@@ -9,6 +9,32 @@ import math = std.math;
 alias Num = float;
 alias EasingFunc = Num function(Num x) pure nothrow @nogc @safe;
 
+enum {
+    red = RGBA(255, 0, 0),
+    green = RGBA(0, 255, 0),
+    blue = RGBA(0, 0, 255),
+    yellow = RGBA(255, 255, 0),
+    magenta = RGBA(255, 0, 255),
+    cyan = RGBA(0, 255, 255),
+    black = RGBA(0, 0, 0),
+    white = RGBA(255, 255, 255),
+    blank = RGBA(),
+}
+
+enum {
+    left = Vec2(-1, 0),
+    right = Vec2(1, 0),
+    up = Vec2(0, -1),
+    down = Vec2(0, 1),
+}
+
+enum Palette {
+    black = RGBA(0x2b, 0x2b, 0x26),
+    darkGray = RGBA(0x70, 0x6b, 0x66),
+    lightGray = RGBA(0xa8, 0x9f, 0x94),
+    white = RGBA(0xe0, 0xdb, 0xcd),
+}
+
 enum Anchor {
     topLeft,
     top,
@@ -26,35 +52,6 @@ enum Side {
     right = Anchor.centerRight,
     top = Anchor.top,
     bottom = Anchor.bottom,
-}
-
-enum BasicPalette {
-    red = RGBA(255, 0, 0),
-    green = RGBA(0, 255, 0),
-    blue = RGBA(0, 0, 255),
-    yellow = RGBA(255, 255, 0),
-    magenta = RGBA(255, 0, 255),
-    cyan = RGBA(0, 255, 255),
-    black = RGBA(0, 0, 0),
-    white = RGBA(255, 255, 255),
-}
-
-enum DebugPalette {
-    red = RGBA(255, 0, 0, 100),
-    green = RGBA(0, 255, 0, 100),
-    blue = RGBA(0, 0, 255, 100),
-    yellow = RGBA(255, 255, 0, 100),
-    magenta = RGBA(255, 0, 255, 100),
-    cyan = RGBA(0, 255, 255, 100),
-    black = RGBA(0, 0, 0, 100),
-    white = RGBA(255, 255, 255, 100),
-}
-
-enum CutePalette {
-    black = RGBA(0x2b, 0x2b, 0x26),
-    darkGray = RGBA(0x70, 0x6b, 0x66),
-    lightGray = RGBA(0xa8, 0x9f, 0x94),
-    white = RGBA(0xe0, 0xdb, 0xcd),
 }
 
 struct Vec2 {
@@ -196,6 +193,29 @@ pure nothrow @nogc @safe:
             x + (to.x - x) * weight,
             y + (to.y - y) * weight,
         );
+    }
+
+    Vec2 point(Anchor from) {
+        final switch (from) {
+        case Anchor.topLeft:
+            return Vec2(0, 0);
+        case Anchor.top:
+            return Vec2(x / 2, 0);
+        case Anchor.topRight:
+            return Vec2(x, 0);
+        case Anchor.centerLeft:
+            return Vec2(0, y / 2);
+        case Anchor.center:
+            return Vec2(x / 2, y / 2);
+        case Anchor.centerRight:
+            return Vec2(x, y / 2);
+        case Anchor.bottomLeft:
+            return Vec2(0, y);
+        case Anchor.bottom:
+            return Vec2(x / 2, y);
+        case Anchor.bottomRight:
+            return Vec2(x, y);
+        }
     }
 }
 

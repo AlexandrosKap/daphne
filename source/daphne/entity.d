@@ -5,24 +5,28 @@ module daphne.entity;
 
 alias Entity = size_t;
 
-// NOTE: Maybe check if "isActive" is a boolean.
-struct EntityGroup(T) if (__traits(hasMember, T, "isActive")) {
+struct EntityArray(T) {
 pure nothrow @nogc @safe:
     T[] components;
+    bool[] states;
     Entity lastEntity;
 
-    this(T[] components) {
+    this(T[] components, bool[] states) {
+        if (components.length != states.length) {
+            assert(0, "the number of components is not the same as the number of states");
+        }
         this.components = components;
+        this.states = states;
     }
 
     size_t length() {
-        return components.length;
+        return states.length;
     }
 
     size_t entityCount() {
         size_t count;
         foreach (i; 0 .. length) {
-            count += components[i].isActive;
+            count += states[i];
         }
         return count;
     }
@@ -36,7 +40,7 @@ pure nothrow @nogc @safe:
     }
 
     bool has(Entity entity) {
-        return entity < length && components[entity].isActive;
+        return entity < length && states[entity];
     }
 
     T* get(Entity entity) {
@@ -49,7 +53,7 @@ pure nothrow @nogc @safe:
 
     void remove(Entity entity) {
         if (has(entity)) {
-            components[entity].isActive = false;
+            states[entity] = false;
             if (entity < lastEntity) {
                 lastEntity = entity;
             }
@@ -58,9 +62,9 @@ pure nothrow @nogc @safe:
 
     Entity append(T component) {
         foreach (i; lastEntity .. length) {
-            if (!components[i].isActive) {
+            if (!states[i]) {
                 components[i] = component;
-                components[i].isActive = true;
+                states[i] = true;
                 lastEntity = i;
                 return i;
             }
@@ -70,17 +74,17 @@ pure nothrow @nogc @safe:
 
     void clear() {
         foreach (i; 0 .. length) {
-            components[i].isActive = false;
+            states[i] = false;
         }
     }
 
     auto entities() {
         struct Range {
-            T[] components;
+            bool[] states;
             Entity currentEntity;
 
             bool empty() {
-                return currentEntity >= components.length;
+                return currentEntity >= states.length;
             }
 
             Entity front() {
@@ -89,42 +93,41 @@ pure nothrow @nogc @safe:
 
             void popFront() {
                 currentEntity += 1;
-                while (currentEntity < components.length && !components[currentEntity].isActive) {
+                while (currentEntity < states.length && !states[currentEntity]) {
                     currentEntity += 1;
                 }
             }
         }
 
         Entity startEntity;
-        while (startEntity < components.length && !components[startEntity].isActive) {
+        while (startEntity < states.length && !states[startEntity]) {
             startEntity += 1;
         }
-        return Range(components, startEntity);
+        return Range(states, startEntity);
     }
 }
 
 unittest {
     struct Cat {
         int age;
-        bool isActive;
     }
 
-    auto group = EntityGroup!Cat(new Cat[4]);
-    assert(group.length == 4);
+    auto cats = EntityArray!Cat(new Cat[4], new bool[4]);
+    assert(cats.length == 4);
 
-    assert(group.entityCount == 0);
-    group.append(Cat(3));
-    group.append(Cat(7));
-    assert(group.entityCount == 2);
+    assert(cats.entityCount == 0);
+    cats.append(Cat(3));
+    cats.append(Cat(7));
+    assert(cats.entityCount == 2);
 
-    foreach (entity; group.entities) {
-        auto cat = group.get(entity);
+    foreach (entity; cats.entities) {
+        auto cat = cats.get(entity);
         cat.age += 1;
         if (cat.age > 7) {
-            group.remove(entity);
+            cats.remove(entity);
         }
     }
-    assert(group.entityCount == 1);
-    group.clear();
-    assert(group.isEmpty);
+    assert(cats.entityCount == 1);
+    cats.clear();
+    assert(cats.isEmpty);
 }

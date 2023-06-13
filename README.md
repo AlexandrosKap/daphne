@@ -37,8 +37,8 @@ void main() {
 import daphne.animation;
 
 void main() {
-    Frame[2] frames = [Frame(15, 1), Frame(30, 2)];
-    Animation anim = Animation(frames);
+    auto frames = [Frame(15, 1), Frame(30, 2)];
+    auto anim = Animation(frames);
 
     assert(anim.time == 0);
     assert(anim.start == 1);
@@ -62,29 +62,36 @@ import daphne.entity;
 void main() {
     struct Cat {
         int age;
-        bool isActive;
     }
 
-    auto group = EntityGroup!Cat(new Cat[4]);
-    assert(group.length == 4);
+    auto cats = EntityArray!Cat(new Cat[4], new bool[4]);
+    assert(cats.length == 4);
 
-    assert(group.entityCount == 0);
-    group.append(Cat(3));
-    group.append(Cat(7));
-    assert(group.entityCount == 2);
+    assert(cats.entityCount == 0);
+    cats.append(Cat(3));
+    cats.append(Cat(7));
+    assert(cats.entityCount == 2);
 
-    foreach (entity; group.entities) {
-        auto cat = group.get(entity);
+    foreach (entity; cats.entities) {
+        auto cat = cats.get(entity);
         cat.age += 1;
         if (cat.age > 7) {
-            group.remove(entity);
+            cats.remove(entity);
         }
     }
-    assert(group.entityCount == 1);
-    group.clear();
-    assert(group.isEmpty);
+    assert(cats.entityCount == 1);
+    cats.clear();
+    assert(cats.isEmpty);
 }
 ```
+
+## 📎 Contributing
+
+These are the things to keep in mind if you want to write code for the project:
+
+* This is not an object-oriented library.
+* The library must be compatible with @nogc.
+* Simple solutions are preferred over smart solutions.
 
 ## 📌 License
 

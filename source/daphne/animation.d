@@ -206,8 +206,8 @@ pure nothrow @nogc @safe:
 }
 
 unittest {
-    Frame[2] frames = [Frame(15, 1), Frame(30, 2)];
-    Animation anim = Animation(frames);
+    auto frames = [Frame(15, 1), Frame(30, 2)];
+    auto anim = Animation(frames);
 
     assert(anim.time == 0);
     assert(anim.start == 1);
