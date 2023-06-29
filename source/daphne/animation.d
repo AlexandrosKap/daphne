@@ -3,221 +3,91 @@
 
 module daphne.animation;
 
-import std.math;
+import daphne.math;
+import daphne.memory;
 
-alias Num = float;
-alias EasingFunc = Num function(Num x) pure nothrow @nogc @safe;
+nothrow @nogc @safe:
 
-pure nothrow @nogc @safe {
-    // TODO: Add more easing functions.
-    // TODO: Think about curves.
-
-    Num ease(Num a, Num b, Num weight, EasingFunc f) {
-        return a + (b - a) * f(weight);
-    }
-
-    Num lerp(Num a, Num b, Num weight) {
-        return a + (b - a) * weight;
-    }
-
-    Num easeLinear(Num x) {
-        return x;
-    }
-
-    Num easeInSine(Num x) {
-        return 1 - cos((x * PI) / 2);
-    }
-
-    Num easeOutSine(Num x) {
-        return sin((x * PI) / 2);
-    }
-
-    Num easeInOutSine(Num x) {
-        return -(cos(PI * x) - 1) / 2;
-    }
-
-    Num easeInQuad(Num x) {
-        return x * x;
-    }
-
-    Num easeOutQuad(Num x) {
-        return 1 - (1 - x) * (1 - x);
-    }
-
-    Num easeInOutQuad(Num x) {
-        if (x < 0.5) {
-            return 2 * x * x;
-        } else {
-            return 1 - pow(-2 * x + 2, 2) / 2;
-        }
-    }
-
-    Num easeInCubic(Num x) {
-        return x * x * x;
-    }
-
-    Num easeOutCubic(Num x) {
-        return 1 - pow(1 - x, 3);
-    }
-
-    Num easeInOutCubic(Num x) {
-        if (x < 0.5) {
-            return 4 * x * x * x;
-        } else {
-            return 1 - pow(-2 * x + 2, 3) / 2;
-        }
-    }
-
-    Num easeInQuart(Num x) {
-        return x * x * x * x;
-    }
-
-    Num easeOutQuart(Num x) {
-        return 1 - pow(1 - x, 4);
-    }
-
-    Num easeInOutQuart(Num x) {
-        if (x < 0.5) {
-            return 8 * x * x * x * x;
-        } else {
-            return 1 - pow(-2 * x + 2, 4) / 2;
-        }
-    }
-
-    Num easeInQuint(Num x) {
-        return x * x * x * x * x;
-    }
-
-    Num easeOutQuint(Num x) {
-        return 1 - pow(1 - x, 5);
-    }
-
-    Num easeInOutQuint(Num x) {
-        if (x < 0.5) {
-            return 16 * x * x * x * x * x;
-        } else {
-            return 1 - pow(-2 * x + 2, 5) / 2;
-        }
-    }
+enum isFrameType(T)() {
+    return is(T == Num) ||
+        is(T == RGBA) ||
+        is(T == Line) ||
+        is(T == Circ) ||
+        is(T == Rect) ||
+        is(T == Vec2) ||
+        is(T == Vec3) ||
+        is(T == Vec4);
 }
 
-struct Frame {
-pure nothrow @nogc @safe:
-    Num value = 0;
+struct Frame(T) if (isFrameType!T) {
+    T value;
     Num time = 0;
     EasingFunc f = &easeLinear;
-
-    this(Num value, Num time, EasingFunc f) {
-        this.value = value;
-        this.time = time;
-        this.f = f;
-    }
-
-    this(Num value, Num time) {
-        this(value, time, &easeLinear);
-    }
 }
 
-// NOTE: Maybe add index to optimize updating.
-struct Animation {
-pure nothrow @nogc @safe:
-    Frame[] frames;
+struct FrameSequence(T) if (isFrameType!T) {
+    List!(Frame!T) frames;
     Num time = 0;
+}
 
-    this(Frame[] frames) {
-        this.frames = frames;
-    }
+FrameSequence!T makeFrameSequence(T)(size_t capacity) {
+    FrameSequence!T result;
+    result.frames = makeList!(Frame!T)(capacity);
+    return result;
+}
 
-    size_t length() {
-        return frames.length;
-    }
+void disposeFrameSequence(T)(ref FrameSequence!T s) {
+    disposeList(s.frames);
+}
 
-    bool isEmpty() {
-        return start == end;
-    }
+bool hasFrames(T)(FrameSequence!T s) {
+    return s.frames.length != 0;
+}
 
-    Num start() {
-        return length > 0 ? frames[0].time : 0;
-    }
+Num startTime(T)(FrameSequence!T s) {
+    return s.frames.length != 0 ? s.frames.items[0].time : 0;
+}
 
-    Num end() {
-        return length > 0 ? frames[$ - 1].time : 0;
-    }
+Num endTime(T)(FrameSequence!T s) {
+    return s.frames.length != 0 ? s.frames.items[$ - 1].time : 0;
+}
 
-    Num progress() {
-        return length > 0 ? time / end : 0;
-    }
+Num progress(T)(FrameSequence!T s) {
+    return s.frames.length != 0 && s.frames.items[$ - 1].time != 0 ? time / s.frames.items[$ - 1]
+        : 0;
+}
 
-    Num value() {
-        if (length == 0) {
-            return 0;
-        } else if (time <= frames[0].time) {
-            return frames[0].value;
-        } else if (time >= frames[$ - 1].time) {
-            return frames[$ - 1].value;
-        } else {
-            foreach (i; 0 .. length) {
-                if (frames[i].time > time) {
-                    Frame a = frames[i - 1];
-                    Frame b = frames[i];
-                    Num weight = (time - a.time) / (b.time - a.time);
-                    return ease(a.value, b.value, weight, a.f);
-                }
-            }
-            return 0;
-        }
-    }
-
-    bool hasStarted() {
-        return time > start;
-    }
-
-    bool hasEnded() {
-        return time >= end;
-    }
-
-    void jumpToStart() {
-        time = start;
-    }
-
-    void jumpToEnd() {
-        time = end;
-    }
-
-    void update(Num amount) {
-        time += amount;
-    }
-
-    void updateAndLoop(Num amount) {
-        time += amount;
-        if (time < start) {
-            time += end;
-        } else if (time > end) {
-            time -= end;
-        }
-    }
-
-    void makeEnd(size_t index) {
-        Frame f = frames[index];
-        foreach (i; index + 1 .. length) {
-            frames[i] = f;
-        }
+Frame!T currentFrame(T)(FrameSequence!T s) {
+    if (s.frames.length == 0) {
+        return Frame!T();
+    } else if (s.time <= s.frames.items[0].time) {
+        return s.frames.items[0];
+    } else if (s.time >= s.frames.items[$ - 1].time) {
+        return s.frames.items[$ - 1];
+    } else {
+        assert(0, "Not done with frame(T)(s)");
     }
 }
 
 unittest {
-    auto frames = [Frame(15, 1), Frame(30, 2)];
-    auto anim = Animation(frames);
+    auto animation = FrameSequence!Num();
+    scope (exit)
+        disposeFrameSequence(animation);
+    animation.frames.append(Frame!Num(15, 1));
+    animation.frames.append(Frame!Num(30, 2));
 
-    assert(anim.time == 0);
-    assert(anim.start == 1);
-    assert(anim.end == 2);
-    assert(anim.value == 15);
+    assert(animation.time == 0);
+    assert(animation.startTime == 1);
+    assert(animation.endTime == 2);
+    assert(animation.currentFrame == Frame!Num(15, 1));
 
+    // TODO: Need to add stuff here.
+    /*
     anim.jumpToStart();
     foreach (i; 0 .. 5) {
         anim.update(0.25);
     }
     assert(anim.hasEnded);
     assert(anim.value == 30);
+    */
 }

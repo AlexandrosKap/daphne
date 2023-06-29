@@ -1,8 +1,6 @@
 #!/bin/env rdmd
 
-import std.algorithm;
 import std.file;
-import std.parallelism;
 import std.process;
 import std.stdio;
 
@@ -15,8 +13,9 @@ enum dfmt = "dfmt" ~
     " ";
 
 void main() {
-    foreach (file; parallel(dirEntries(".", SpanMode.depth))) {
-        if (file.name.endsWith(".d")) {
+    foreach (file; dirEntries(".", SpanMode.depth)) {
+        auto name = file.name;
+        if (name.length >= 3 && name[$ - 2 .. $] == ".d") {
             writeln("formatting: " ~ file.name);
             wait(spawnShell(dfmt ~ file.name));
         }

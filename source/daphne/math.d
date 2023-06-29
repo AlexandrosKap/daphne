@@ -3,22 +3,17 @@
 
 module daphne.math;
 
-import std.algorithm;
-import math = std.math;
+import math = core.stdc.math;
+
+nothrow @nogc @safe:
 
 alias Num = float;
-alias EasingFunc = Num function(Num x) pure nothrow @nogc @safe;
+alias EasingFunc = Num function(Num x);
 
 enum {
-    red = RGBA(255, 0, 0),
-    green = RGBA(0, 255, 0),
-    blue = RGBA(0, 0, 255),
-    yellow = RGBA(255, 255, 0),
-    magenta = RGBA(255, 0, 255),
-    cyan = RGBA(0, 255, 255),
-    black = RGBA(0, 0, 0),
-    white = RGBA(255, 255, 255),
-    blank = RGBA(),
+    pi = 3.141592,
+    pi2 = pi / 2,
+    pi4 = pi / 4,
 }
 
 enum {
@@ -28,11 +23,16 @@ enum {
     down = Vec2(0, 1),
 }
 
-enum Palette {
-    black = RGBA(0x2b, 0x2b, 0x26),
-    darkGray = RGBA(0x70, 0x6b, 0x66),
-    lightGray = RGBA(0xa8, 0x9f, 0x94),
-    white = RGBA(0xe0, 0xdb, 0xcd),
+enum {
+    red = RGBA(255, 0, 0, 255),
+    green = RGBA(0, 255, 0, 255),
+    blue = RGBA(0, 0, 255, 255),
+    yellow = RGBA(255, 255, 0, 255),
+    magenta = RGBA(255, 0, 255, 255),
+    cyan = RGBA(0, 255, 255, 255),
+    black = RGBA(0, 0, 0, 255),
+    white = RGBA(255, 255, 255, 255),
+    blank = RGBA(),
 }
 
 enum Anchor {
@@ -54,188 +54,63 @@ enum Side {
     bottom = Anchor.bottom,
 }
 
+struct RGBA {
+    ubyte r;
+    ubyte g;
+    ubyte b;
+    ubyte a;
+}
+
+struct Line {
+    Num x1 = 0;
+    Num y1 = 0;
+    Num x2 = 0;
+    Num y2 = 0;
+}
+
+struct Circ {
+    Num x = 0;
+    Num y = 0;
+    Num r = 0;
+}
+
+struct Rect {
+    Num x = 0;
+    Num y = 0;
+    Num w = 0;
+    Num h = 0;
+}
+
 struct Vec2 {
-pure nothrow @nogc @safe:
     Num x = 0;
     Num y = 0;
 
-    this(Num x, Num y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    this(Num x) {
-        this(x, x);
-    }
-
-    this(Anchor from) {
-        final switch (from) {
-        case Anchor.topLeft:
-            this.x = -1;
-            this.y = -1;
-            break;
-        case Anchor.top:
-            this.x = 0;
-            this.y = -1;
-            break;
-        case Anchor.topRight:
-            this.x = 1;
-            this.y = -1;
-            break;
-        case Anchor.centerLeft:
-            this.x = -1;
-            this.y = 0;
-            break;
-        case Anchor.center:
-            this.x = 0;
-            this.y = 0;
-            break;
-        case Anchor.centerRight:
-            this.x = 1;
-            this.y = 0;
-            break;
-        case Anchor.bottomLeft:
-            this.x = -1;
-            this.y = 1;
-            break;
-        case Anchor.bottom:
-            this.x = 0;
-            this.y = 1;
-            break;
-        case Anchor.bottomRight:
-            this.x = 1;
-            this.y = 1;
-            break;
-        }
-    }
-
-    Vec2 opUnary(string op)() {
+    Vec2 opUnary(string op)() nothrow @nogc @safe {
         return Vec2(
             mixin(op ~ "x"),
             mixin(op ~ "y"),
         );
     }
 
-    Vec2 opBinary(string op)(Vec2 rhs) {
+    Vec2 opBinary(string op)(Vec2 rhs) nothrow @nogc @safe {
         return Vec2(
             mixin("x " ~ op ~ " rhs.x"),
             mixin("y " ~ op ~ " rhs.y"),
         );
     }
 
-    void opOpAssign(string op)(Vec2 rhs) {
+    void opOpAssign(string op)(Vec2 rhs) nothrow @nogc @safe {
         mixin("x " ~ op ~ "= rhs.x;");
         mixin("y " ~ op ~ "= rhs.y;");
-    }
-
-    bool isZero() {
-        return x == 0 && y == 0;
-    }
-
-    Num magnitudeSquared() {
-        return x * x + y * y;
-    }
-
-    Num magnitude() {
-        return math.sqrt(magnitudeSquared);
-    }
-
-    Vec2 normalized() {
-        auto m = magnitude;
-        if (m != 0) {
-            return Vec2(x / m, y / m);
-        } else {
-            return Vec2();
-        }
-    }
-
-    Vec2 sqrt() {
-        return Vec2(math.sqrt(x), math.sqrt(y));
-    }
-
-    Vec2 abs() {
-        return Vec2(math.abs(x), math.abs(y));
-    }
-
-    Vec2 floor() {
-        return Vec2(math.floor(x), math.floor(y));
-    }
-
-    Vec2 round() {
-        return Vec2(math.round(x), math.round(y));
-    }
-
-    Vec2 ceil() {
-        return Vec2(math.ceil(x), math.ceil(y));
-    }
-
-    Vec2 distanceTo(Vec2 to) {
-        return (to - this).abs;
-    }
-
-    Vec2 directionToSquared(Vec2 to) {
-        return (to - this);
-    }
-
-    Vec2 directionTo(Vec2 to) {
-        return directionToSquared(to).normalized;
-    }
-
-    Vec2 ease(Vec2 to, Num weight, EasingFunc f) {
-        return Vec2(
-            x + (to.x - x) * f(weight),
-            y + (to.y - y) * f(weight),
-        );
-    }
-
-    Vec2 lerp(Vec2 to, Num weight) {
-        return Vec2(
-            x + (to.x - x) * weight,
-            y + (to.y - y) * weight,
-        );
-    }
-
-    Vec2 point(Anchor from) {
-        final switch (from) {
-        case Anchor.topLeft:
-            return Vec2(0, 0);
-        case Anchor.top:
-            return Vec2(x / 2, 0);
-        case Anchor.topRight:
-            return Vec2(x, 0);
-        case Anchor.centerLeft:
-            return Vec2(0, y / 2);
-        case Anchor.center:
-            return Vec2(x / 2, y / 2);
-        case Anchor.centerRight:
-            return Vec2(x, y / 2);
-        case Anchor.bottomLeft:
-            return Vec2(0, y);
-        case Anchor.bottom:
-            return Vec2(x / 2, y);
-        case Anchor.bottomRight:
-            return Vec2(x, y);
-        }
     }
 }
 
 struct Vec3 {
-pure nothrow @nogc @safe:
     Num x = 0;
     Num y = 0;
     Num z = 0;
 
-    this(Num x, Num y, Num z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
-    this(Num x) {
-        this(x, x, x);
-    }
-
-    Vec3 opUnary(string op)() {
+    Vec3 opUnary(string op)() nothrow @nogc @safe {
         return Vec3(
             mixin(op ~ "x"),
             mixin(op ~ "y"),
@@ -243,7 +118,7 @@ pure nothrow @nogc @safe:
         );
     }
 
-    Vec3 opBinary(string op)(Vec3 rhs) {
+    Vec3 opBinary(string op)(Vec3 rhs) nothrow @nogc @safe {
         return Vec3(
             mixin("x " ~ op ~ " rhs.x"),
             mixin("y " ~ op ~ " rhs.y"),
@@ -251,101 +126,20 @@ pure nothrow @nogc @safe:
         );
     }
 
-    void opOpAssign(string op)(Vec3 rhs) {
+    void opOpAssign(string op)(Vec3 rhs) nothrow @nogc @safe {
         mixin("x " ~ op ~ "= rhs.x;");
         mixin("y " ~ op ~ "= rhs.y;");
         mixin("z " ~ op ~ "= rhs.z;");
     }
-
-    bool isZero() {
-        return x == 0 && y == 0 && z == 0;
-    }
-
-    Num magnitudeSquared() {
-        return x * x + y * y + z * z;
-    }
-
-    Num magnitude() {
-        return math.sqrt(magnitudeSquared);
-    }
-
-    Vec3 normalized() {
-        auto m = magnitude;
-        if (m != 0) {
-            return Vec3(x / m, y / m, z / m);
-        } else {
-            return Vec3();
-        }
-    }
-
-    Vec3 sqrt() {
-        return Vec3(math.sqrt(x), math.sqrt(y), math.sqrt(z));
-    }
-
-    Vec3 abs() {
-        return Vec3(math.abs(x), math.abs(y), math.abs(z));
-    }
-
-    Vec3 floor() {
-        return Vec3(math.floor(x), math.floor(y), math.floor(z));
-    }
-
-    Vec3 round() {
-        return Vec3(math.round(x), math.round(y), math.round(z));
-    }
-
-    Vec3 ceil() {
-        return Vec3(math.ceil(x), math.ceil(y), math.ceil(z));
-    }
-
-    Vec3 distanceTo(Vec3 to) {
-        return (to - this).abs;
-    }
-
-    Vec3 directionToSquared(Vec3 to) {
-        return (to - this);
-    }
-
-    Vec3 directionTo(Vec3 to) {
-        return directionToSquared(to).normalized;
-    }
-
-    Vec3 ease(Vec3 to, Num weight, EasingFunc f) {
-        return Vec3(
-            x + (to.x - x) * f(weight),
-            y + (to.y - y) * f(weight),
-            z + (to.z - z) * f(weight),
-        );
-    }
-
-    Vec3 lerp(Vec3 to, Num weight) {
-        return Vec3(
-            x + (to.x - x) * weight,
-            y + (to.y - y) * weight,
-            z + (to.z - z) * weight,
-        );
-    }
 }
 
 struct Vec4 {
-pure nothrow @nogc @safe:
     Num x = 0;
     Num y = 0;
     Num z = 0;
     Num w = 0;
 
-    this(Num x, Num y, Num z, Num w) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.w = w;
-    }
-
-    this(Num x) {
-        this(x, x, x, x);
-    }
-
-    Vec4 opUnary(string op)() {
+    Vec4 opUnary(string op)() nothrow @nogc @safe {
         return Vec4(
             mixin(op ~ "x"),
             mixin(op ~ "y"),
@@ -354,7 +148,7 @@ pure nothrow @nogc @safe:
         );
     }
 
-    Vec4 opBinary(string op)(Vec4 rhs) {
+    Vec4 opBinary(string op)(Vec4 rhs) nothrow @nogc @safe {
         return Vec4(
             mixin("x " ~ op ~ " rhs.x"),
             mixin("y " ~ op ~ " rhs.y"),
@@ -363,518 +157,882 @@ pure nothrow @nogc @safe:
         );
     }
 
-    void opOpAssign(string op)(Vec4 rhs) {
+    void opOpAssign(string op)(Vec4 rhs) nothrow @nogc @safe {
         mixin("x " ~ op ~ "= rhs.x;");
         mixin("y " ~ op ~ "= rhs.y;");
         mixin("z " ~ op ~ "= rhs.z;");
         mixin("w " ~ op ~ "= rhs.w;");
     }
+}
 
-    bool isZero() {
-        return x == 0 && y == 0 && z == 0 && w == 0;
+// --- Basic procedures
+
+static if (is(Num == float)) {
+    Num cos(Num x) {
+        return math.cosf(x);
     }
 
-    Num magnitudeSquared() {
-        return x * x + y * y + z * z + w * w;
+    Num sin(Num x) {
+        return math.sinf(x);
     }
 
-    Num magnitude() {
-        return math.sqrt(magnitudeSquared);
+    Num pow(Num x, Num y) {
+        return math.powf(x, y);
     }
 
-    Vec4 normalized() {
-        auto m = magnitude;
-        if (m != 0) {
-            return Vec4(x / m, y / m, z / m, w / m);
-        } else {
-            return Vec4();
-        }
+    Num sqrt(Num x) {
+        return math.sqrtf(x);
     }
 
-    Vec4 sqrt() {
-        return Vec4(math.sqrt(x), math.sqrt(y), math.sqrt(z), math.sqrt(w));
+    Num abs(Num x) {
+        return math.fabsf(x);
     }
 
-    Vec4 abs() {
-        return Vec4(math.abs(x), math.abs(y), math.abs(z), math.abs(w));
+    Num floor(Num x) {
+        return math.floorf(x);
     }
 
-    Vec4 floor() {
-        return Vec4(math.floor(x), math.floor(y), math.floor(z), math.floor(w));
+    Num round(Num x) {
+        return math.roundf(x);
     }
 
-    Vec4 round() {
-        return Vec4(math.round(x), math.round(y), math.round(z), math.round(w));
+    Num ceil(Num x) {
+        return math.ceilf(x);
+    }
+} else static if (is(Num == double)) {
+    Num cos(Num x) {
+        return math.cos(x);
     }
 
-    Vec4 ceil() {
-        return Vec4(math.ceil(x), math.ceil(y), math.ceil(z), math.ceil(w));
+    Num sin(Num x) {
+        return math.sin(x);
     }
 
-    Vec4 distanceTo(Vec4 to) {
-        return (to - this).abs;
+    Num pow(Num x, Num y) {
+        return math.pow(x, y);
     }
 
-    Vec4 directionToSquared(Vec4 to) {
-        return (to - this);
+    Num sqrt(Num x) {
+        return math.sqrt(x);
     }
 
-    Vec4 directionTo(Vec4 to) {
-        return directionToSquared(to).normalized;
+    Num abs(Num x) {
+        return math.fabs(x);
     }
 
-    Vec4 ease(Vec4 to, Num weight, EasingFunc f) {
-        return Vec4(
-            x + (to.x - x) * f(weight),
-            y + (to.y - y) * f(weight),
-            z + (to.z - z) * f(weight),
-            w + (to.w - w) * f(weight),
-        );
+    Num floor(Num x) {
+        return math.floor(x);
     }
 
-    Vec4 lerp(Vec4 to, Num weight) {
-        return Vec4(
-            x + (to.x - x) * weight,
-            y + (to.y - y) * weight,
-            z + (to.z - z) * weight,
-            w + (to.w - w) * weight,
-        );
+    Num round(Num x) {
+        return math.round(x);
+    }
+
+    Num ceil(Num x) {
+        return math.ceil(x);
+    }
+} else static if (is(Num == real)) {
+    Num cos(Num x) {
+        return math.cosl(x);
+    }
+
+    Num sin(Num x) {
+        return math.sinl(x);
+    }
+
+    Num pow(Num x, Num y) {
+        return math.powl(x, y);
+    }
+
+    Num sqrt(float x) {
+        return math.sqrtl(x);
+    }
+
+    Num abs(Num x) {
+        return math.fabsl(x);
+    }
+
+    Num floor(Num x) {
+        return math.floorl(x);
+    }
+
+    Num round(Num x) {
+        return math.roundl(x);
+    }
+
+    Num ceil(Num x) {
+        return math.ceill(x);
     }
 }
 
-struct Line {
-pure nothrow @nogc @safe:
-    Num x1 = 0;
-    Num y1 = 0;
-    Num x2 = 0;
-    Num y2 = 0;
+Num min(Num a, Num b) {
+    return a <= b ? a : b;
+}
 
-    this(Num x1, Num y1, Num x2, Num y2) {
-        this.x1 = x1;
-        this.y1 = y1;
-        this.x2 = x2;
-        this.y2 = y2;
-    }
+Num max(Num a, Num b) {
+    return a >= b ? a : b;
+}
 
-    this(Vec2 a, Vec2 b) {
-        this(a.x, a.y, b.x, b.y);
-    }
+Num lerp(Num a, Num b, Num weight) {
+    return a + (b - a) * weight;
+}
 
-    bool isZero() {
-        return x1 == 0 && y1 == 0 && x2 == 0 && y2 == 0;
-    }
+Num ease(Num a, Num b, Num weight, EasingFunc f) {
+    return a + (b - a) * f(weight);
+}
 
-    Vec2 a() {
-        return Vec2(x1, y1);
-    }
+Num easeLinear(Num x) {
+    return x;
+}
 
-    void a(Vec2 value) {
-        x1 = value.x;
-        y1 = value.y;
-    }
+Num easeInSine(Num x) {
+    return 1 - cos((x * pi) / 2);
+}
 
-    Vec2 b() {
-        return Vec2(x2, y2);
-    }
+Num easeOutSine(Num x) {
+    return sin((x * pi) / 2);
+}
 
-    void b(Vec2 value) {
-        x2 = value.x;
-        y2 = value.y;
+Num easeInOutSine(Num x) {
+    return -(cos(pi * x) - 1) / 2;
+}
+
+Num easeInQuad(Num x) {
+    return x * x;
+}
+
+Num easeOutQuad(Num x) {
+    return 1 - (1 - x) * (1 - x);
+}
+
+Num easeInOutQuad(Num x) {
+    if (x < 0.5) {
+        return 2 * x * x;
+    } else {
+        return 1 - pow(-2 * x + 2, 2) / 2;
     }
 }
 
-struct Rect {
-pure nothrow @nogc @safe:
-    Num x = 0;
-    Num y = 0;
-    Num w = 0;
-    Num h = 0;
+Num easeInCubic(Num x) {
+    return x * x * x;
+}
 
-    this(Num x, Num y, Num w, Num h) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
+Num easeOutCubic(Num x) {
+    return 1 - pow(1 - x, 3);
+}
+
+Num easeInOutCubic(Num x) {
+    if (x < 0.5) {
+        return 4 * x * x * x;
+    } else {
+        return 1 - pow(-2 * x + 2, 3) / 2;
     }
+}
 
-    this(Vec2 start, Vec2 size) {
-        this(start.x, start.y, size.x, size.y);
+Num easeInQuart(Num x) {
+    return x * x * x * x;
+}
+
+Num easeOutQuart(Num x) {
+    return 1 - pow(1 - x, 4);
+}
+
+Num easeInOutQuart(Num x) {
+    if (x < 0.5) {
+        return 8 * x * x * x * x;
+    } else {
+        return 1 - pow(-2 * x + 2, 4) / 2;
     }
+}
 
-    bool isZero() {
-        return x == 0 && y == 0 && w == 0 && h == 0;
+Num easeInQuint(Num x) {
+    return x * x * x * x * x;
+}
+
+Num easeOutQuint(Num x) {
+    return 1 - pow(1 - x, 5);
+}
+
+Num easeInOutQuint(Num x) {
+    if (x < 0.5) {
+        return 16 * x * x * x * x * x;
+    } else {
+        return 1 - pow(-2 * x + 2, 5) / 2;
     }
+}
 
-    Vec2 size() {
-        return Vec2(w, h);
+// --- RGBA procedures
+
+RGBA rgba(ubyte r, ubyte g, ubyte b, ubyte a) {
+    return RGBA(r, g, b, a);
+}
+
+RGBA rgba(ubyte r, ubyte g, ubyte b) {
+    return RGBA(r, g, b, 255);
+}
+
+RGBA rgba(ubyte r) {
+    return RGBA(r, r, r, 255);
+}
+
+RGBA lerp(RGBA v, RGBA to, Num weight) {
+    Num r = cast(Num) v.r + cast(Num)(to.r - v.r) * weight;
+    Num g = cast(Num) v.g + cast(Num)(to.g - v.g) * weight;
+    Num b = cast(Num) v.b + cast(Num)(to.b - v.b) * weight;
+    Num a = cast(Num) v.a + cast(Num)(to.a - v.a) * weight;
+    return RGBA(
+        r < 0 ? 0 : r > 255 ? 255 : cast(ubyte) r,
+        g < 0 ? 0 : g > 255 ? 255 : cast(ubyte) g,
+        b < 0 ? 0 : b > 255 ? 255 : cast(ubyte) b,
+        a < 0 ? 0 : a > 255 ? 255 : cast(ubyte) a,
+    );
+}
+
+RGBA ease(RGBA v, RGBA to, Num weight, EasingFunc f) {
+    Num r = cast(Num) v.r + cast(Num)(to.r - v.r) * f(weight);
+    Num g = cast(Num) v.g + cast(Num)(to.g - v.g) * f(weight);
+    Num b = cast(Num) v.b + cast(Num)(to.b - v.b) * f(weight);
+    Num a = cast(Num) v.a + cast(Num)(to.a - v.a) * f(weight);
+    return RGBA(
+        r < 0 ? 0 : r > 255 ? 255 : cast(ubyte) r,
+        g < 0 ? 0 : g > 255 ? 255 : cast(ubyte) g,
+        b < 0 ? 0 : b > 255 ? 255 : cast(ubyte) b,
+        a < 0 ? 0 : a > 255 ? 255 : cast(ubyte) a,
+    );
+}
+
+// --- Line procedures
+
+Line line(Num x1, Num y1, Num x2, Num y2) {
+    return Line(x1, y1, x2, y2);
+}
+
+Line line(Vec2 a, Vec2 b) {
+    return Line(a.x, a.y, b.x, b.y);
+}
+
+Line lerp(Line l, Line to, Num weight) {
+    return Line(
+        l.x1 + (to.x1 - l.x1) * weight,
+        l.y1 + (to.y1 - l.y1) * weight,
+        l.x2 + (to.x2 - l.x2) * weight,
+        l.y2 + (to.y2 - l.y2) * weight,
+    );
+}
+
+Line ease(Line l, Line to, Num weight, EasingFunc f) {
+    return Line(
+        l.x1 + (to.x1 - l.x1) * f(weight),
+        l.y1 + (to.y1 - l.y1) * f(weight),
+        l.x2 + (to.x2 - l.x2) * f(weight),
+        l.y2 + (to.y2 - l.y2) * f(weight),
+    );
+}
+
+// --- Circ procedures
+
+Circ circ(Num x, Num y, Num r) {
+    return Circ(x, y, r);
+}
+
+Circ circ(Vec2 center, Num r) {
+    return Circ(center.x, center.y, r);
+}
+
+Vec2 center(Circ c) {
+    return Vec2(c.x, c.y);
+}
+
+void setCenter(ref Circ c, Vec2 value) {
+    c.x = value.x;
+    c.y = value.y;
+}
+
+Circ lerp(Circ c, Circ to, Num weight) {
+    return Circ(
+        c.x + (to.x - c.x) * weight,
+        c.y + (to.y - c.y) * weight,
+        c.r + (to.r - c.r) * weight,
+    );
+}
+
+Circ ease(Circ c, Circ to, Num weight, EasingFunc f) {
+    return Circ(
+        c.x + (to.x - c.x) * f(weight),
+        c.y + (to.y - c.y) * f(weight),
+        c.r + (to.r - c.r) * f(weight),
+    );
+}
+
+// --- Rect procedures
+
+Rect rect(Num x, Num y, Num w, Num h) {
+    return Rect(x, y, w, h);
+}
+
+Rect rect(Vec2 start, Vec2 size) {
+    return Rect(start.x, start.y, size.x, size.y);
+}
+
+Vec2 size(Rect r) {
+    return Vec2(r.w, r.h);
+}
+
+void setSize(ref Rect r, Vec2 value) {
+    r.w = value.x;
+    r.h = value.y;
+}
+
+Vec2 start(Rect r) {
+    return Vec2(r.x, r.y);
+}
+
+void setStart(ref Rect r, Vec2 value) {
+    r.x = value.x;
+    r.y = value.y;
+}
+
+Vec2 center(Rect r) {
+    return Vec2(r.x + r.w / 2, r.y + r.h / 2);
+}
+
+void setCenter(ref Rect r, Vec2 value) {
+    r.x = value.x - r.w / 2;
+    r.y = value.y - r.h / 2;
+}
+
+Vec2 end(Rect r) {
+    return Vec2(r.x + r.w, r.y + r.h);
+}
+
+void setEnd(ref Rect r, Vec2 value) {
+    r.w = value.x - r.x;
+    r.h = value.y - r.y;
+}
+
+Num area(Rect r) {
+    return r.w * r.h;
+}
+
+Vec2 point(Rect r, Anchor from) {
+    final switch (from) {
+    case Anchor.topLeft:
+        return Vec2(r.x, r.y);
+    case Anchor.top:
+        return Vec2(r.x + r.w / 2, r.y);
+    case Anchor.topRight:
+        return Vec2(r.x + r.w, r.y);
+    case Anchor.centerLeft:
+        return Vec2(r.x, r.y + r.h / 2);
+    case Anchor.center:
+        return Vec2(r.x + r.w / 2, r.y + r.h / 2);
+    case Anchor.centerRight:
+        return Vec2(r.x + r.w, r.y + r.h / 2);
+    case Anchor.bottomLeft:
+        return Vec2(r.x, r.y + r.h);
+    case Anchor.bottom:
+        return Vec2(r.x + r.w / 2, r.y + r.h);
+    case Anchor.bottomRight:
+        return Vec2(r.x + r.w, r.y + r.h);
     }
+}
 
-    void size(Vec2 value) {
-        w = value.x;
-        h = value.y;
-    }
+bool hasPoint(Rect r, Vec2 point) {
+    return point.x >= r.x &&
+        point.x <= r.x + r.w &&
+        point.y >= r.y &&
+        point.y <= r.y + r.h;
+}
 
-    Vec2 start() {
-        return Vec2(x, y);
-    }
+bool isIntersecting(Rect r, Rect other) {
+    return r.x + r.w >= other.x &&
+        r.x <= other.x + other.w &&
+        r.y + r.h >= other.y &&
+        r.y <= other.y + other.h;
+}
 
-    void start(Vec2 value) {
-        x = value.x;
-        y = value.y;
-    }
-
-    Vec2 center() {
-        return Vec2(x + w / 2, y + h / 2);
-    }
-
-    void center(Vec2 value) {
-        x = value.x - w / 2;
-        y = value.y - h / 2;
-    }
-
-    Vec2 end() {
-        return Vec2(x + w, y + h);
-    }
-
-    void end(Vec2 value) {
-        w = value.x - x;
-        h = value.y - y;
-    }
-
-    Num area() {
-        return w * h;
-    }
-
-    bool hasArea() {
-        return area != 0;
-    }
-
-    Vec2 point(Anchor from) {
-        auto s = start;
-        final switch (from) {
-        case Anchor.topLeft:
-            return Vec2(s.x, s.y);
-        case Anchor.top:
-            return Vec2(s.x + w / 2, s.y);
-        case Anchor.topRight:
-            return Vec2(s.x + w, s.y);
-        case Anchor.centerLeft:
-            return Vec2(s.x, s.y + h / 2);
-        case Anchor.center:
-            return Vec2(s.x + w / 2, s.y + h / 2);
-        case Anchor.centerRight:
-            return Vec2(s.x + w, s.y + h / 2);
-        case Anchor.bottomLeft:
-            return Vec2(s.x, s.y + h);
-        case Anchor.bottom:
-            return Vec2(s.x + w / 2, s.y + h);
-        case Anchor.bottomRight:
-            return Vec2(s.x + w, s.y + h);
-        }
-    }
-
-    bool hasPoint(Vec2 point) {
-        auto e = end;
-        return point.x >= x &&
-            point.x <= e.x &&
-            point.y >= y &&
-            point.y <= e.y;
-    }
-
-    bool isIntersecting(Rect other) {
-        return x + w >= other.x &&
-            x <= other.x + other.w &&
-            y + h >= other.y &&
-            y <= other.y + other.h;
-    }
-
-    Rect intersection(Rect other) {
-        if (isIntersecting(other)) {
-            auto e1 = end;
-            auto e2 = other.end;
-            auto maxp = Vec2(max(x, other.x), max(y, other.y));
-            return Rect(
-                maxp.x,
-                maxp.y,
-                min(e1.x, e2.x) - maxp.x,
-                min(e1.y, e2.y) - maxp.y,
-            );
-        } else {
-            return Rect();
-        }
-    }
-
-    Rect merger(Rect other) {
-        auto e1 = end;
-        auto e2 = other.end;
-        auto minp = Vec2(min(x, other.x), min(y, other.y));
+Rect intersection(Rect r, Rect other) {
+    if (isIntersecting(r, other)) {
+        Num maxx = max(r.x, other.x);
+        Num maxy = max(r.y, other.y);
         return Rect(
-            minp.x,
-            minp.y,
-            max(e1.x, e2.x) - minp.x,
-            max(e1.y, e2.y) - minp.y,
+            maxx,
+            maxy,
+            min(r.x + r.w, other.x + other.w) - maxx,
+            min(r.y + r.h, other.y + other.h) - maxy,
         );
-    }
-
-    Rect left(Num amount) {
-        return Rect(x, y, amount, h);
-    }
-
-    Rect outsideLeft(Num amount) {
-        return Rect(x - amount, y, amount, h);
-    }
-
-    Rect cutLeft(Num amount) {
-        auto l = left(amount);
-        x = min(w, x + amount);
-        w = max(x, w - amount);
-        return l;
-    }
-
-    Rect right(Num amount) {
-        return Rect(x + w - amount, y, amount, h);
-    }
-
-    Rect outsideRight(Num amount) {
-        return Rect(x + w, y, amount, h);
-    }
-
-    Rect cutRight(Num amount) {
-        auto r = right(amount);
-        w = max(x, w - amount);
-        return r;
-    }
-
-    Rect top(Num amount) {
-        return Rect(x, y, w, amount);
-    }
-
-    Rect outsideTop(Num amount) {
-        return Rect(x, y - amount, w, amount);
-    }
-
-    Rect cutTop(Num amount) {
-        auto t = top(amount);
-        y = min(h, y + amount);
-        h = max(y, h - amount);
-        return t;
-    }
-
-    Rect bottom(Num amount) {
-        return Rect(x, y + h - amount, w, amount);
-    }
-
-    Rect outsideBottom(Num amount) {
-        return Rect(x, y + h, w, amount);
-    }
-
-    Rect cutBottom(Num amount) {
-        auto b = bottom(amount);
-        h = max(y, h - amount);
-        return b;
-    }
-
-    Rect side(Side from, Num amount) {
-        final switch (from) {
-        case Side.left:
-            return left(amount);
-        case Side.right:
-            return right(amount);
-        case Side.top:
-            return top(amount);
-        case Side.bottom:
-            return bottom(amount);
-        }
-    }
-
-    Rect outsideSide(Side from, Num amount) {
-        final switch (from) {
-        case Side.left:
-            return outsideLeft(amount);
-        case Side.right:
-            return outsideRight(amount);
-        case Side.top:
-            return outsideTop(amount);
-        case Side.bottom:
-            return outsideBottom(amount);
-        }
-    }
-
-    Rect cutSide(Side from, Num amount) {
-        final switch (from) {
-        case Side.left:
-            return cutLeft(amount);
-        case Side.right:
-            return cutRight(amount);
-        case Side.top:
-            return cutTop(amount);
-        case Side.bottom:
-            return cutBottom(amount);
-        }
-    }
-
-    void extendLeft(Num amount) {
-        x -= amount;
-        w += amount;
-    }
-
-    void extendRight(Num amount) {
-        w += amount;
-    }
-
-    void extendTop(Num amount) {
-        y -= amount;
-        h += amount;
-    }
-
-    void extendBottom(Num amount) {
-        h += amount;
-    }
-
-    void extendSide(Side from, Num amount) {
-        final switch (from) {
-        case Side.left:
-            extendLeft(amount);
-            break;
-        case Side.right:
-            extendRight(amount);
-            break;
-        case Side.top:
-            extendTop(amount);
-            break;
-        case Side.bottom:
-            extendBottom(amount);
-            break;
-        }
-    }
-
-    void extendLeftRight(Num amount) {
-        extendLeft(amount);
-        extendRight(amount);
-    }
-
-    void extendTopBottom(Num amount) {
-        extendTop(amount);
-        extendBottom(amount);
-    }
-
-    void extend(Num amount) {
-        extendLeftRight(amount);
-        extendTopBottom(amount);
-    }
-
-    void contractLeft(Num amount) {
-        x += amount;
-        w -= amount;
-    }
-
-    void contractRight(Num amount) {
-        w -= amount;
-    }
-
-    void contractTop(Num amount) {
-        y += amount;
-        h -= amount;
-    }
-
-    void contractBottom(Num amount) {
-        h -= amount;
-    }
-
-    void contractSide(Side from, Num amount) {
-        final switch (from) {
-        case Side.left:
-            contractLeft(amount);
-            break;
-        case Side.right:
-            contractRight(amount);
-            break;
-        case Side.top:
-            contractTop(amount);
-            break;
-        case Side.bottom:
-            contractBottom(amount);
-            break;
-        }
-    }
-
-    void contractLeftRight(Num amount) {
-        contractLeft(amount);
-        contractRight(amount);
-    }
-
-    void contractTopBottom(Num amount) {
-        contractTop(amount);
-        contractBottom(amount);
-    }
-
-    void contract(Num amount) {
-        contractLeftRight(amount);
-        contractTopBottom(amount);
+    } else {
+        return Rect();
     }
 }
 
-struct Circ {
-pure nothrow @nogc @safe:
-    Num x = 0;
-    Num y = 0;
-    Num r = 0;
+Rect merger(Rect r, Rect other) {
+    Num minx = min(r.x, other.x);
+    Num miny = min(r.y, other.y);
+    return Rect(
+        minx,
+        miny,
+        max(r.x + r.w, other.x + other.w) - minx,
+        max(r.y + r.h, other.y + other.h) - miny,
+    );
+}
 
-    this(Num x, Num y, Num r) {
-        this.x = x;
-        this.y = y;
-        this.r = r;
-    }
+Rect leftSide(Rect r, Num amount) {
+    return Rect(r.x, r.y, amount, r.h);
+}
 
-    this(Vec2 center, Num r) {
-        this(center.x, center.y, r);
-    }
+Rect outsideLeftSide(Rect r, Num amount) {
+    return Rect(r.x - amount, r.y, amount, r.h);
+}
 
-    bool isZero() {
-        return x == 0 && y == 0 && r == 0;
-    }
+Rect cutLeftSide(ref Rect r, Num amount) {
+    auto side = leftSide(r, amount);
+    r.x = min(r.w, r.x + amount);
+    r.w = max(r.x, r.w - amount);
+    return side;
+}
 
-    Vec2 center() {
-        return Vec2(x, y);
-    }
+Rect rightSide(Rect r, Num amount) {
+    return Rect(r.x + r.w - amount, r.y, amount, r.h);
+}
 
-    void center(Vec2 value) {
-        x = value.x;
-        y = value.y;
+Rect outsideRightSide(Rect r, Num amount) {
+    return Rect(r.x + r.w, r.y, amount, r.h);
+}
+
+Rect cutRightSide(ref Rect r, Num amount) {
+    auto side = rightSide(r, amount);
+    r.w = max(r.x, r.w - amount);
+    return side;
+}
+
+Rect topSide(Rect r, Num amount) {
+    return Rect(r.x, r.y, r.w, amount);
+}
+
+Rect outsideTopSide(Rect r, Num amount) {
+    return Rect(r.x, r.y - amount, r.w, amount);
+}
+
+Rect cutTopSide(ref Rect r, Num amount) {
+    auto side = topSide(r, amount);
+    r.y = min(r.h, r.y + amount);
+    r.h = max(r.y, r.h - amount);
+    return side;
+}
+
+Rect bottomSide(Rect r, Num amount) {
+    return Rect(r.x, r.y + r.h - amount, r.w, amount);
+}
+
+Rect outsideBottomSide(Rect r, Num amount) {
+    return Rect(r.x, r.y + r.h, r.w, amount);
+}
+
+Rect cutBottomSide(ref Rect r, Num amount) {
+    auto side = bottomSide(r, amount);
+    r.h = max(r.y, r.h - amount);
+    return side;
+}
+
+Rect side(Rect r, Side from, Num amount) {
+    final switch (from) {
+    case Side.left:
+        return leftSide(r, amount);
+    case Side.right:
+        return rightSide(r, amount);
+    case Side.top:
+        return topSide(r, amount);
+    case Side.bottom:
+        return bottomSide(r, amount);
     }
 }
 
-struct RGBA {
-    ubyte r;
-    ubyte g;
-    ubyte b;
-    ubyte a;
-
-    this(ubyte r, ubyte g, ubyte b, ubyte a) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = a;
+Rect outsideSide(Rect r, Side from, Num amount) {
+    final switch (from) {
+    case Side.left:
+        return outsideLeftSide(r, amount);
+    case Side.right:
+        return outsideRightSide(r, amount);
+    case Side.top:
+        return outsideTopSide(r, amount);
+    case Side.bottom:
+        return outsideBottomSide(r, amount);
     }
+}
 
-    this(ubyte r, ubyte g, ubyte b) {
-        this(r, g, b, 255);
+Rect cutSide(ref Rect r, Side from, Num amount) {
+    final switch (from) {
+    case Side.left:
+        return cutLeftSide(r, amount);
+    case Side.right:
+        return cutRightSide(r, amount);
+    case Side.top:
+        return cutTopSide(r, amount);
+    case Side.bottom:
+        return cutBottomSide(r, amount);
     }
+}
 
-    this(ubyte r) {
-        this(r, r, r, 255);
-    }
+void extendLeftSide(ref Rect r, Num amount) {
+    r.x -= amount;
+    r.w += amount;
+}
 
-    bool isZero() {
-        return r == 0 && g == 0 && b == 0 && a == 0;
+void extendRightSide(ref Rect r, Num amount) {
+    r.w += amount;
+}
+
+void extendTopSide(ref Rect r, Num amount) {
+    r.y -= amount;
+    r.h += amount;
+}
+
+void extendBottomSide(ref Rect r, Num amount) {
+    r.h += amount;
+}
+
+void extendSide(ref Rect r, Side from, Num amount) {
+    final switch (from) {
+    case Side.left:
+        extendLeftSide(r, amount);
+        break;
+    case Side.right:
+        extendRightSide(r, amount);
+        break;
+    case Side.top:
+        extendTopSide(r, amount);
+        break;
+    case Side.bottom:
+        extendBottomSide(r, amount);
+        break;
     }
+}
+
+void extendLeftRightSides(ref Rect r, Num amount) {
+    extendLeftSide(r, amount);
+    extendRightSide(r, amount);
+}
+
+void extendTopBottomSides(ref Rect r, Num amount) {
+    extendTopSide(r, amount);
+    extendBottomSide(r, amount);
+}
+
+void extendSides(ref Rect r, Num amount) {
+    extendLeftRightSides(r, amount);
+    extendTopBottomSides(r, amount);
+}
+
+void contractLeftSide(ref Rect r, Num amount) {
+    r.x += amount;
+    r.w -= amount;
+}
+
+void contractRightSide(ref Rect r, Num amount) {
+    r.w -= amount;
+}
+
+void contractTopSide(ref Rect r, Num amount) {
+    r.y += amount;
+    r.h -= amount;
+}
+
+void contractBottomSide(ref Rect r, Num amount) {
+    r.h -= amount;
+}
+
+void contractSide(ref Rect r, Side from, Num amount) {
+    final switch (from) {
+    case Side.left:
+        contractLeftSide(r, amount);
+        break;
+    case Side.right:
+        contractRightSide(r, amount);
+        break;
+    case Side.top:
+        contractTopSide(r, amount);
+        break;
+    case Side.bottom:
+        contractBottomSide(r, amount);
+        break;
+    }
+}
+
+void contractLeftRightSides(ref Rect r, Num amount) {
+    contractLeftSide(r, amount);
+    contractRightSide(r, amount);
+}
+
+void contractTopBottomSides(ref Rect r, Num amount) {
+    contractTopSide(r, amount);
+    contractBottomSide(r, amount);
+}
+
+void contractSides(ref Rect r, Num amount) {
+    contractLeftRightSides(r, amount);
+    contractTopBottomSides(r, amount);
+}
+
+Rect lerp(Rect r, Rect to, Num weight) {
+    return Rect(
+        r.x + (to.x - r.x) * weight,
+        r.y + (to.y - r.y) * weight,
+        r.w + (to.w - r.w) * weight,
+        r.h + (to.h - r.h) * weight,
+    );
+}
+
+Rect ease(Rect r, Rect to, Num weight, EasingFunc f) {
+    return Rect(
+        r.x + (to.x - r.x) * f(weight),
+        r.y + (to.y - r.y) * f(weight),
+        r.w + (to.w - r.w) * f(weight),
+        r.h + (to.h - r.h) * f(weight),
+    );
+}
+
+// --- Vec2 procedures
+
+Vec2 vec2(Num x, Num y) {
+    return Vec2(x, y);
+}
+
+Num magnitudeSquared(Vec2 v) {
+    return v.x * v.x + v.y * v.y;
+}
+
+Num magnitude(Vec2 v) {
+    return sqrt(v.x * v.x + v.y * v.y);
+}
+
+Vec2 normalized(Vec2 v) {
+    Num m = magnitude(v);
+    if (m != 0) {
+        return Vec2(v.x / m, v.y / m);
+    } else {
+        return Vec2();
+    }
+}
+
+Vec2 sqrt(Vec2 v) {
+    return Vec2(sqrt(v.x), sqrt(v.y));
+}
+
+Vec2 abs(Vec2 v) {
+    return Vec2(abs(v.x), abs(v.y));
+}
+
+Vec2 floor(Vec2 v) {
+    return Vec2(floor(v.x), floor(v.y));
+}
+
+Vec2 round(Vec2 v) {
+    return Vec2(round(v.x), round(v.y));
+}
+
+Vec2 ceil(Vec2 v) {
+    return Vec2(ceil(v.x), ceil(v.y));
+}
+
+Vec2 distanceTo(Vec2 v, Vec2 to) {
+    return abs(to - v);
+}
+
+Vec2 directionTo(Vec2 v, Vec2 to) {
+    return normalized(to - v);
+}
+
+Vec2 directionToSquared(Vec2 v, Vec2 to) {
+    return (to - v);
+}
+
+Vec2 point(Vec2 v, Anchor from) {
+    final switch (from) {
+    case Anchor.topLeft:
+        return Vec2(0, 0);
+    case Anchor.top:
+        return Vec2(v.x / 2, 0);
+    case Anchor.topRight:
+        return Vec2(v.x, 0);
+    case Anchor.centerLeft:
+        return Vec2(0, v.y / 2);
+    case Anchor.center:
+        return Vec2(v.x / 2, v.y / 2);
+    case Anchor.centerRight:
+        return Vec2(v.x, v.y / 2);
+    case Anchor.bottomLeft:
+        return Vec2(0, v.y);
+    case Anchor.bottom:
+        return Vec2(v.x / 2, v.y);
+    case Anchor.bottomRight:
+        return Vec2(v.x, v.y);
+    }
+}
+
+Vec2 lerp(Vec2 v, Vec2 to, Num weight) {
+    return Vec2(
+        v.x + (to.x - v.x) * weight,
+        v.y + (to.y - v.y) * weight,
+    );
+}
+
+Vec2 ease(Vec2 v, Vec2 to, Num weight, EasingFunc f) {
+    return Vec2(
+        v.x + (to.x - v.x) * f(weight),
+        v.y + (to.y - v.y) * f(weight),
+    );
+}
+
+// --- Vec3 procedures
+
+Vec3 vec3(Num x, Num y, Num z) {
+    return Vec3(x, y, z);
+}
+
+Num magnitudeSquared(Vec3 v) {
+    return v.x * v.x + v.y * v.y + v.z * v.z;
+}
+
+Num magnitude(Vec3 v) {
+    return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
+Vec3 normalized(Vec3 v) {
+    Num m = magnitude(v);
+    if (m != 0) {
+        return Vec3(v.x / m, v.y / m, v.z / m);
+    } else {
+        return Vec3();
+    }
+}
+
+Vec3 sqrt(Vec3 v) {
+    return Vec3(sqrt(v.x), sqrt(v.y), sqrt(v.z));
+}
+
+Vec3 abs(Vec3 v) {
+    return Vec3(abs(v.x), abs(v.y), abs(v.z));
+}
+
+Vec3 floor(Vec3 v) {
+    return Vec3(floor(v.x), floor(v.y), floor(v.z));
+}
+
+Vec3 round(Vec3 v) {
+    return Vec3(round(v.x), round(v.y), round(v.z));
+}
+
+Vec3 ceil(Vec3 v) {
+    return Vec3(ceil(v.x), ceil(v.y), ceil(v.z));
+}
+
+Vec3 distanceTo(Vec3 v, Vec3 to) {
+    return abs(to - v);
+}
+
+Vec3 directionTo(Vec3 v, Vec3 to) {
+    return normalized(to - v);
+}
+
+Vec3 directionToSquared(Vec3 v, Vec3 to) {
+    return (to - v);
+}
+
+Vec3 lerp(Vec3 v, Vec3 to, Num weight) {
+    return Vec3(
+        v.x + (to.x - v.x) * weight,
+        v.y + (to.y - v.y) * weight,
+        v.z + (to.z - v.z) * weight,
+    );
+}
+
+Vec3 ease(Vec3 v, Vec3 to, Num weight, EasingFunc f) {
+    return Vec3(
+        v.x + (to.x - v.x) * f(weight),
+        v.y + (to.y - v.y) * f(weight),
+        v.z + (to.z - v.z) * f(weight),
+    );
+}
+
+// --- Vec4 procedures
+
+Vec4 vec4(Num x, Num y, Num z, Num w) {
+    return Vec4(x, y, z, w);
+}
+
+Num magnitudeSquared(Vec4 v) {
+    return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
+}
+
+Num magnitude(Vec4 v) {
+    return sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
+}
+
+Vec4 normalized(Vec4 v) {
+    Num m = magnitude(v);
+    if (m != 0) {
+        return Vec4(v.x / m, v.y / m, v.z / m, v.w / m);
+    } else {
+        return Vec4();
+    }
+}
+
+Vec4 sqrt(Vec4 v) {
+    return Vec4(sqrt(v.x), sqrt(v.y), sqrt(v.z), sqrt(v.w));
+}
+
+Vec4 abs(Vec4 v) {
+    return Vec4(abs(v.x), abs(v.y), abs(v.z), abs(v.w));
+}
+
+Vec4 floor(Vec4 v) {
+    return Vec4(floor(v.x), floor(v.y), floor(v.z), floor(v.w));
+}
+
+Vec4 round(Vec4 v) {
+    return Vec4(round(v.x), round(v.y), round(v.z), round(v.w));
+}
+
+Vec4 ceil(Vec4 v) {
+    return Vec4(ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w));
+}
+
+Vec4 distanceTo(Vec4 v, Vec4 to) {
+    return abs(to - v);
+}
+
+Vec4 directionTo(Vec4 v, Vec4 to) {
+    return normalized(to - v);
+}
+
+Vec4 directionToSquared(Vec4 v, Vec4 to) {
+    return (to - v);
+}
+
+Vec4 lerp(Vec4 v, Vec4 to, Num weight) {
+    return Vec4(
+        v.x + (to.x - v.x) * weight,
+        v.y + (to.y - v.y) * weight,
+        v.z + (to.z - v.z) * weight,
+        v.w + (to.w - v.w) * weight,
+    );
+}
+
+Vec4 ease(Vec4 v, Vec4 to, Num weight, EasingFunc f) {
+    return Vec4(
+        v.x + (to.x - v.x) * f(weight),
+        v.y + (to.y - v.y) * f(weight),
+        v.z + (to.z - v.z) * f(weight),
+        v.w + (to.w - v.w) * f(weight),
+    );
 }
 
 unittest {
-    auto r0 = Rect(0, 0, 8, 4);
+    auto r0 = rect(0, 0, 8, 4);
     auto r1 = r0;
     auto r2 = r1.cutSide(Side.right, 4);
 
     assert(r1.merger(r2) == r0);
-    assert(r1.point(Anchor.centerRight) == Vec2(r1.x + r1.w, r1.y + r1.h / 2));
+    assert(r1.point(Anchor.centerRight) == vec2(r1.x + r1.w, r1.y + r1.h / 2));
 }
