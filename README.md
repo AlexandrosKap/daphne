@@ -35,8 +35,8 @@ void main() {
         position = (420, 20)
     `;
 
-    auto reader = IniReader(iniFile);
     size_t loopCount;
+    auto reader = IniReader(iniFile);
     while (readIniPair(reader) == IniError.none) {
         loopCount += 1;
     }
@@ -50,8 +50,7 @@ void main() {
 import daphne.animation;
 
 void main() {
-    auto animation = FrameSequence!Num();
-    scope(exit) disposeFrameSequence(animation);
+    Animation!Num animation;
     animation.frames.append(Frame!Num(15, 1));
     animation.frames.append(Frame!Num(30, 2));
 
@@ -59,6 +58,7 @@ void main() {
     assert(animation.startTime == 1);
     assert(animation.endTime == 2);
     assert(animation.currentFrame == Frame!Num(15, 1));
+    disposeAnimation(animation);
 }
 ```
 

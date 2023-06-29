@@ -9,6 +9,8 @@ enum IniError {
     none,
     eof,
     invalidLine,
+    invalidGroup,
+    invalidKey,
 }
 
 struct IniReader {
@@ -20,6 +22,9 @@ struct IniReader {
     string key;
     string value;
     size_t lineNumber;
+
+    // If isLazy is true, then groups and keys can have almost any character.
+    bool isLazy;
 }
 
 string _strip(string s) {
@@ -31,6 +36,17 @@ string _strip(string s) {
         result = result[0 .. $ - 1];
     }
     return result;
+}
+
+bool isIniGroupChar(char c) {
+    return c != '[' && c != ']';
+}
+
+bool isIniKeyChar(char c) {
+    return c == '-' || c == '_' ||
+        (c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') ||
+        (c >= '0' && c <= '9');
 }
 
 IniError readIniPair(ref IniReader r) {
@@ -63,13 +79,14 @@ IniError readIniPair(ref IniReader r) {
         return readIniPair(r);
     } else if (line[0] == '[') {
         if (line[$ - 1] != ']') {
-            return IniError.invalidLine;
+            return IniError.invalidGroup;
         }
         string group = _strip(line[1 .. $ - 1]);
-        foreach (c; group) {
-            bool isOk = c != '[' && c != ']';
-            if (!isOk) {
-                return IniError.invalidLine;
+        if (!r.isLazy) {
+            foreach (c; group) {
+                if (!isIniGroupChar(c)) {
+                    return IniError.invalidGroup;
+                }
             }
         }
         r.group = group;
@@ -82,13 +99,11 @@ IniError readIniPair(ref IniReader r) {
                 if (key.length == 0 || value.length == 0) {
                     return IniError.invalidLine;
                 }
-                foreach (cc; key) {
-                    bool isOk = cc == '_' ||
-                        (cc >= 'a' && cc <= 'z') ||
-                        (cc >= 'A' && cc <= 'Z') ||
-                        (cc >= '0' && cc <= '9');
-                    if (!isOk) {
-                        return IniError.invalidLine;
+                if (!r.isLazy) {
+                    foreach (cc; key) {
+                        if (!isIniKeyChar(cc)) {
+                            return IniError.invalidKey;
+                        }
                     }
                 }
                 r.key = key;
@@ -114,8 +129,8 @@ unittest {
         position = (420, 20)
     `;
 
-    auto reader = IniReader(iniFile);
     size_t loopCount;
+    auto reader = IniReader(iniFile);
     while (readIniPair(reader) == IniError.none) {
         loopCount += 1;
     }

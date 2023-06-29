@@ -3,8 +3,8 @@
 
 module daphne.animation;
 
-import daphne.math;
 import daphne.memory;
+public import daphne.math;
 
 nothrow @nogc @safe:
 
@@ -25,54 +25,47 @@ struct Frame(T) if (isFrameType!T) {
     EasingFunc f = &easeLinear;
 }
 
-struct FrameSequence(T) if (isFrameType!T) {
+struct Animation(T) if (isFrameType!T) {
     List!(Frame!T) frames;
     Num time = 0;
 }
 
-FrameSequence!T makeFrameSequence(T)(size_t capacity) {
-    FrameSequence!T result;
+Animation!T makeAnimation(T)(size_t capacity) {
+    Animation!T result;
     result.frames = makeList!(Frame!T)(capacity);
     return result;
 }
 
-void disposeFrameSequence(T)(ref FrameSequence!T s) {
-    disposeList(s.frames);
+void disposeAnimation(T)(ref Animation!T a) {
+    disposeList(a.frames);
 }
 
-bool hasFrames(T)(FrameSequence!T s) {
-    return s.frames.length != 0;
+Num startTime(T)(Animation!T a) {
+    return a.frames.length != 0 ? a.frames[0].time : 0;
 }
 
-Num startTime(T)(FrameSequence!T s) {
-    return s.frames.length != 0 ? s.frames.items[0].time : 0;
+Num endTime(T)(Animation!T a) {
+    return a.frames.length != 0 ? a.frames[$ - 1].time : 0;
 }
 
-Num endTime(T)(FrameSequence!T s) {
-    return s.frames.length != 0 ? s.frames.items[$ - 1].time : 0;
+Num progress(T)(Animation!T a) {
+    return (a.frames.length != 0 && a.frames[$ - 1].time != 0) ? time / a.frames[$ - 1].time : 0;
 }
 
-Num progress(T)(FrameSequence!T s) {
-    return s.frames.length != 0 && s.frames.items[$ - 1].time != 0 ? time / s.frames.items[$ - 1]
-        : 0;
-}
-
-Frame!T currentFrame(T)(FrameSequence!T s) {
-    if (s.frames.length == 0) {
+Frame!T currentFrame(T)(Animation!T a) {
+    if (a.frames.length == 0) {
         return Frame!T();
-    } else if (s.time <= s.frames.items[0].time) {
-        return s.frames.items[0];
-    } else if (s.time >= s.frames.items[$ - 1].time) {
-        return s.frames.items[$ - 1];
+    } else if (a.time <= a.frames[0].time) {
+        return a.frames[0];
+    } else if (a.time >= a.frames[$ - 1].time) {
+        return a.frames[$ - 1];
     } else {
-        assert(0, "Not done with frame(T)(s)");
+        assert(0, "sowwy but not done uwu");
     }
 }
 
 unittest {
-    auto animation = FrameSequence!Num();
-    scope (exit)
-        disposeFrameSequence(animation);
+    Animation!Num animation;
     animation.frames.append(Frame!Num(15, 1));
     animation.frames.append(Frame!Num(30, 2));
 
@@ -80,6 +73,7 @@ unittest {
     assert(animation.startTime == 1);
     assert(animation.endTime == 2);
     assert(animation.currentFrame == Frame!Num(15, 1));
+    disposeAnimation(animation);
 
     // TODO: Need to add stuff here.
     /*

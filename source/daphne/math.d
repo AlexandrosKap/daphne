@@ -103,6 +103,20 @@ struct Vec2 {
         mixin("x " ~ op ~ "= rhs.x;");
         mixin("y " ~ op ~ "= rhs.y;");
     }
+
+    ref Num opIndex(size_t index) return nothrow @nogc @safe {
+        if (index == 0) {
+            return x;
+        } else if (index == 1) {
+            return y;
+        } else {
+            assert(0, "index out of range");
+        }
+    }
+
+    size_t opDollar(size_t index)() nothrow @nogc @safe {
+        return 2;
+    }
 }
 
 struct Vec3 {
@@ -130,6 +144,22 @@ struct Vec3 {
         mixin("x " ~ op ~ "= rhs.x;");
         mixin("y " ~ op ~ "= rhs.y;");
         mixin("z " ~ op ~ "= rhs.z;");
+    }
+
+    ref Num opIndex(size_t index) return nothrow @nogc @safe {
+        if (index == 0) {
+            return x;
+        } else if (index == 1) {
+            return y;
+        } else if (index == 2) {
+            return z;
+        } else {
+            assert(0, "index out of range");
+        }
+    }
+
+    size_t opDollar(size_t index)() nothrow @nogc @safe {
+        return 3;
     }
 }
 
@@ -162,6 +192,24 @@ struct Vec4 {
         mixin("y " ~ op ~ "= rhs.y;");
         mixin("z " ~ op ~ "= rhs.z;");
         mixin("w " ~ op ~ "= rhs.w;");
+    }
+
+    ref Num opIndex(size_t index) return nothrow @nogc @safe {
+        if (index == 0) {
+            return x;
+        } else if (index == 1) {
+            return y;
+        } else if (index == 2) {
+            return z;
+        } else if (index == 3) {
+            return w;
+        } else {
+            assert(0, "index out of range");
+        }
+    }
+
+    size_t opDollar(size_t index)() nothrow @nogc @safe {
+        return 4;
     }
 }
 
@@ -798,6 +846,10 @@ Vec2 vec2(Num x, Num y) {
     return Vec2(x, y);
 }
 
+Vec2 vec2(Num x) {
+    return Vec2(x, x);
+}
+
 Num magnitudeSquared(Vec2 v) {
     return v.x * v.x + v.y * v.y;
 }
@@ -890,6 +942,10 @@ Vec3 vec3(Num x, Num y, Num z) {
     return Vec3(x, y, z);
 }
 
+Vec3 vec3(Num x) {
+    return Vec3(x, x, x);
+}
+
 Num magnitudeSquared(Vec3 v) {
     return v.x * v.x + v.y * v.y + v.z * v.z;
 }
@@ -959,6 +1015,10 @@ Vec3 ease(Vec3 v, Vec3 to, Num weight, EasingFunc f) {
 
 Vec4 vec4(Num x, Num y, Num z, Num w) {
     return Vec4(x, y, z, w);
+}
+
+Vec4 vec4(Num x) {
+    return Vec4(x, x, x, x);
 }
 
 Num magnitudeSquared(Vec4 v) {

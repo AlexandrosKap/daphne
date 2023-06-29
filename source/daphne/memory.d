@@ -14,6 +14,18 @@ enum {
 struct List(T) {
     T[] items;
     size_t capacity;
+
+    ref T opIndex(size_t index) nothrow @nogc @safe {
+        return items[index];
+    }
+
+    T[] opSlice(size_t index)(size_t a, size_t b) nothrow @nogc @safe {
+        return items[a .. b];
+    }
+
+    size_t opDollar(size_t index)() nothrow @nogc @safe {
+        return items.length;
+    }
 }
 
 void* alloc(size_t size) {
@@ -197,24 +209,20 @@ unittest {
     int a = 6;
     int b = 9;
     size_t itemCount = 2;
-    size_t capacity = 12;
     List!int list;
 
-    list = makeList!int(capacity);
-    assert(length(list) == 0);
-    append(list, a);
-    append(list, b);
+    assert(list.length == 0);
+    assert(list.capacity == 0);
+    list.append(a);
+    list.append(b);
+    assert(list.length == itemCount);
+    assert(list.capacity == defaultListCapacity);
+    assert(list[0] == a);
+    assert(list[1] == b);
 
-    assert(length(list) != 0);
-    assert(length(list) == itemCount);
-    assert(list.capacity == capacity);
-    assert(list.items[0] == a);
-    assert(list.items[1] == b);
-
-    removeLast(list);
-    assert(length(list) == itemCount - 1);
-    setLength(list, capacity * 2);
-    assert(length(list) == capacity * 2);
+    list.removeLast();
+    assert(list.length == itemCount - 1);
     disposeList(list);
-    assert(length(list) == 0);
+    assert(list.length == 0);
+    assert(list.capacity == 0);
 }
