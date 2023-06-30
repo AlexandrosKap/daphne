@@ -85,6 +85,7 @@ struct Vec2 {
     Num x = 0;
     Num y = 0;
 
+    pragma(inline, true)
     Vec2 opUnary(string op)() nothrow @nogc @safe {
         return Vec2(
             mixin(op ~ "x"),
@@ -92,6 +93,7 @@ struct Vec2 {
         );
     }
 
+    pragma(inline, true)
     Vec2 opBinary(string op)(Vec2 rhs) nothrow @nogc @safe {
         return Vec2(
             mixin("x " ~ op ~ " rhs.x"),
@@ -99,11 +101,13 @@ struct Vec2 {
         );
     }
 
+    pragma(inline, true)
     void opOpAssign(string op)(Vec2 rhs) nothrow @nogc @safe {
         mixin("x " ~ op ~ "= rhs.x;");
         mixin("y " ~ op ~ "= rhs.y;");
     }
 
+    pragma(inline, true)
     ref Num opIndex(size_t index) return nothrow @nogc @safe {
         if (index == 0) {
             return x;
@@ -114,6 +118,7 @@ struct Vec2 {
         }
     }
 
+    pragma(inline, true)
     size_t opDollar(size_t index)() nothrow @nogc @safe {
         return 2;
     }
@@ -124,6 +129,7 @@ struct Vec3 {
     Num y = 0;
     Num z = 0;
 
+    pragma(inline, true)
     Vec3 opUnary(string op)() nothrow @nogc @safe {
         return Vec3(
             mixin(op ~ "x"),
@@ -132,6 +138,7 @@ struct Vec3 {
         );
     }
 
+    pragma(inline, true)
     Vec3 opBinary(string op)(Vec3 rhs) nothrow @nogc @safe {
         return Vec3(
             mixin("x " ~ op ~ " rhs.x"),
@@ -140,12 +147,14 @@ struct Vec3 {
         );
     }
 
+    pragma(inline, true)
     void opOpAssign(string op)(Vec3 rhs) nothrow @nogc @safe {
         mixin("x " ~ op ~ "= rhs.x;");
         mixin("y " ~ op ~ "= rhs.y;");
         mixin("z " ~ op ~ "= rhs.z;");
     }
 
+    pragma(inline, true)
     ref Num opIndex(size_t index) return nothrow @nogc @safe {
         if (index == 0) {
             return x;
@@ -158,6 +167,7 @@ struct Vec3 {
         }
     }
 
+    pragma(inline, true)
     size_t opDollar(size_t index)() nothrow @nogc @safe {
         return 3;
     }
@@ -169,6 +179,7 @@ struct Vec4 {
     Num z = 0;
     Num w = 0;
 
+    pragma(inline, true)
     Vec4 opUnary(string op)() nothrow @nogc @safe {
         return Vec4(
             mixin(op ~ "x"),
@@ -178,6 +189,7 @@ struct Vec4 {
         );
     }
 
+    pragma(inline, true)
     Vec4 opBinary(string op)(Vec4 rhs) nothrow @nogc @safe {
         return Vec4(
             mixin("x " ~ op ~ " rhs.x"),
@@ -187,6 +199,7 @@ struct Vec4 {
         );
     }
 
+    pragma(inline, true)
     void opOpAssign(string op)(Vec4 rhs) nothrow @nogc @safe {
         mixin("x " ~ op ~ "= rhs.x;");
         mixin("y " ~ op ~ "= rhs.y;");
@@ -194,6 +207,7 @@ struct Vec4 {
         mixin("w " ~ op ~ "= rhs.w;");
     }
 
+    pragma(inline, true)
     ref Num opIndex(size_t index) return nothrow @nogc @safe {
         if (index == 0) {
             return x;
@@ -208,6 +222,7 @@ struct Vec4 {
         }
     }
 
+    pragma(inline, true)
     size_t opDollar(size_t index)() nothrow @nogc @safe {
         return 4;
     }
@@ -459,6 +474,24 @@ Line line(Vec2 a, Vec2 b) {
     return Line(a.x, a.y, b.x, b.y);
 }
 
+Vec2 startPoint(Line l) {
+    return Vec2(l.x1, l.y1);
+}
+
+void setStartPoint(ref Line l, Vec2 value) {
+    l.x1 = value.x;
+    l.y1 = value.y;
+}
+
+Vec2 endPoint(Line l) {
+    return Vec2(l.x2, l.y2);
+}
+
+void setEndPoint(ref Line l, Vec2 value) {
+    l.x2 = value.x;
+    l.y2 = value.y;
+}
+
 Line lerp(Line l, Line to, Num weight) {
     return Line(
         l.x1 + (to.x1 - l.x1) * weight,
@@ -487,11 +520,11 @@ Circ circ(Vec2 center, Num r) {
     return Circ(center.x, center.y, r);
 }
 
-Vec2 center(Circ c) {
+Vec2 centerPoint(Circ c) {
     return Vec2(c.x, c.y);
 }
 
-void setCenter(ref Circ c, Vec2 value) {
+void setCenterPoint(ref Circ c, Vec2 value) {
     c.x = value.x;
     c.y = value.y;
 }
@@ -531,29 +564,29 @@ void setSize(ref Rect r, Vec2 value) {
     r.h = value.y;
 }
 
-Vec2 start(Rect r) {
+Vec2 startPoint(Rect r) {
     return Vec2(r.x, r.y);
 }
 
-void setStart(ref Rect r, Vec2 value) {
+void setStartpoint(ref Rect r, Vec2 value) {
     r.x = value.x;
     r.y = value.y;
 }
 
-Vec2 center(Rect r) {
+Vec2 centerPoint(Rect r) {
     return Vec2(r.x + r.w / 2, r.y + r.h / 2);
 }
 
-void setCenter(ref Rect r, Vec2 value) {
+void setCenterPoint(ref Rect r, Vec2 value) {
     r.x = value.x - r.w / 2;
     r.y = value.y - r.h / 2;
 }
 
-Vec2 end(Rect r) {
+Vec2 endPoint(Rect r) {
     return Vec2(r.x + r.w, r.y + r.h);
 }
 
-void setEnd(ref Rect r, Vec2 value) {
+void setEndPoint(ref Rect r, Vec2 value) {
     r.w = value.x - r.x;
     r.h = value.y - r.y;
 }

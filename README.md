@@ -41,6 +41,7 @@ void main() {
         loopCount += 1;
     }
     assert(loopCount == pairCount);
+    assert(reader.groupPairCounter == 2);
 }
 ```
 
@@ -57,7 +58,15 @@ void main() {
     assert(animation.time == 0);
     assert(animation.startTime == 1);
     assert(animation.endTime == 2);
-    assert(animation.currentFrame == Frame!Num(15, 1));
+
+    assert(animation.progress == 0);
+    assert(animation.currentFrame.value == 15);
+    animation.jumpToStartFrame();
+    foreach (i; 0 .. 10) {
+        animation.update(0.25);
+    }
+    assert(animation.progress == 1);
+    assert(animation.currentFrame.value == 30);
     disposeAnimation(animation);
 }
 ```

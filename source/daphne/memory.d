@@ -15,14 +15,22 @@ struct List(T) {
     T[] items;
     size_t capacity;
 
+    pragma(inline, true)
     ref T opIndex(size_t index) nothrow @nogc @safe {
         return items[index];
     }
 
+    pragma(inline, true)
+    T[] opIndex() nothrow @nogc @safe {
+        return items[];
+    }
+
+    pragma(inline, true)
     T[] opSlice(size_t index)(size_t a, size_t b) nothrow @nogc @safe {
         return items[a .. b];
     }
 
+    pragma(inline, true)
     size_t opDollar(size_t index)() nothrow @nogc @safe {
         return items.length;
     }

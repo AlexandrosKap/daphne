@@ -22,6 +22,7 @@ struct IniReader {
     string key;
     string value;
     size_t lineNumber;
+    size_t groupPairCounter;
 
     // If isLazy is true, then groups and keys can have almost any character.
     bool isLazy;
@@ -90,6 +91,7 @@ IniError readIniPair(ref IniReader r) {
             }
         }
         r.group = group;
+        r.groupPairCounter = 0;
         return readIniPair(r);
     } else {
         foreach (i, c; line) {
@@ -108,6 +110,7 @@ IniError readIniPair(ref IniReader r) {
                 }
                 r.key = key;
                 r.value = value;
+                r.groupPairCounter += 1;
                 return IniError.none;
             }
         }
@@ -135,4 +138,5 @@ unittest {
         loopCount += 1;
     }
     assert(loopCount == pairCount);
+    assert(reader.groupPairCounter == 2);
 }

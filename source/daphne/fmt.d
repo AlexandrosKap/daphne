@@ -37,6 +37,14 @@ void print(T)(T arg) {
         }
         print(arg[$ - 1]);
         print(']');
+    } else static if (is(T == enum)) {
+        enum members = __traits(allMembers, T);
+        foreach (i, member; members) {
+            if (i == arg) {
+                print(member);
+                break;
+            }
+        }
     } else static if (is(T == struct)) {
         enum members = __traits(allMembers, T);
         static if (members.length == 0) {
@@ -54,14 +62,8 @@ void print(T)(T arg) {
             print(__traits(getMember, arg, members[$ - 1]));
             print(')');
         }
-    } else static if (is(T == enum)) {
-        enum members = __traits(allMembers, T);
-        foreach (i, member; members) {
-            if (i == arg) {
-                print(member);
-                break;
-            }
-        }
+    } else static if (is(T == P*, P)) {
+        io.printf("%p", arg);
     } else static if (is(T : bool)) {
         arg ? io.printf("true") : io.printf("false");
     } else static if (is(T : char)) {
@@ -77,7 +79,7 @@ void print(T)(T arg) {
     } else static if (is(T : float) || is(T : double) || is(T : real)) {
         io.printf("%g", arg);
     } else {
-        assert(0, "type is not supported by print procedure");
+        print('?');
     }
 }
 
