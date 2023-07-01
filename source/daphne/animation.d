@@ -40,8 +40,9 @@ Animation!T makeAnimation(T)(size_t capacity) {
     return result;
 }
 
-void disposeAnimation(T)(ref Animation!T a) {
-    disposeList(a.frames);
+void destroyAnimation(T)(ref Animation!T a) {
+    destroyList(a.frames);
+    a.time = 0;
 }
 
 Num startTime(T)(Animation!T a) {
@@ -90,7 +91,7 @@ Frame!T currentFrame(T)(Animation!T a) {
                 );
             }
         }
-        assert(0, "sowwy but somewing went wong uwu");
+        return Frame!T();
     }
 }
 
@@ -136,5 +137,5 @@ unittest {
     }
     assert(animation.progress == 1);
     assert(animation.currentFrame.value == 30);
-    disposeAnimation(animation);
+    destroyAnimation(animation);
 }

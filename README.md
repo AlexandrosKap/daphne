@@ -16,35 +16,6 @@ This means that most of the library modules are self-contained and that things l
 
 ## 📝 Examples
 
-### Ini Module
-
-```d
-import daphne.ini;
-
-void main() {
-    size_t pairCount = 4;
-    string iniFile = `
-        # This is my epic player in my epic game.
-        [    Player   ]
-        name   = Bob
-        health = 69
-
-        # This is an epic monster in my epic game.
-        [  Monster 1  ]
-        name     = Goomba
-        position = (420, 20)
-    `;
-
-    size_t loopCount;
-    auto reader = IniReader(iniFile);
-    while (readIniPair(reader) == IniError.none) {
-        loopCount += 1;
-    }
-    assert(loopCount == pairCount);
-    assert(reader.groupPairCounter == 2);
-}
-```
-
 ### Animation Module
 
 ```d
@@ -67,16 +38,70 @@ void main() {
     }
     assert(animation.progress == 1);
     assert(animation.currentFrame.value == 30);
-    disposeAnimation(animation);
+    destroyAnimation(animation);
 }
 ```
+
+### Ini Module
+
+```d
+import daphne.animation;
+
+void main() {
+    enum pairCount = 4;
+    enum iniFile = `
+        # This is my epic player in my epic game.
+        [    Player   ]
+        name   = Bob
+        health = 69
+
+        # This is an epic monster in my epic game.
+        [  Monster 1  ]
+        name     = Goomba
+        position = (420, 20)
+    `;
+
+    auto i = 0;
+    auto reader = makeIniReader(iniFile);
+    while (reader.readIniPair() == IniError.none) {
+        i += 1;
+    }
+    assert(i == pairCount);
+    assert(reader.groupPairCounter == 2);
+}
+```
+
+### Math Module
+
+```d
+import daphne.animation;
+
+void main() {
+    auto r0 = Rect(0, 0, 8, 4);
+    auto r1 = r0;
+    auto r2 = r1.cutSide(Side.right, 4);
+
+    assert(merger(r1, r2) == r0);
+    assert(r1.point(Anchor.centerRight) == Vec2(r1.x + r1.w, r1.y + r1.h / 2));
+}
+```
+
+## 🎨 Daphne Style
+
+The Daphne Style is a set of style conventions for writing D programs.
+
+* Structures are recommended to be POD.
+* Constructor procedures start with `make`.
+* Destructor procedures start with `destroy`.
+* Memory-related procedures start with `alloc`, `realloc` and `free`.
+* Memory-related procedures should always return a pointer or a slice.
 
 ## 📎 Contributing
 
 These are the things to keep in mind if you want to write code for the project:
 
 - This is not an object-oriented library.
-- The library must be compatible with @nogc.
+- The library must be compatible with @nogc @safe.
 - Simple solutions are preferred over smart solutions.
 
 ## 📌 License

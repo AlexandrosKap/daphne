@@ -426,15 +426,15 @@ Num easeInOutQuint(Num x) {
 
 // --- RGBA procedures
 
-RGBA rgba(ubyte r, ubyte g, ubyte b, ubyte a) {
+RGBA makeRGBA(ubyte r, ubyte g, ubyte b, ubyte a) {
     return RGBA(r, g, b, a);
 }
 
-RGBA rgba(ubyte r, ubyte g, ubyte b) {
+RGBA makeRGBA(ubyte r, ubyte g, ubyte b) {
     return RGBA(r, g, b, 255);
 }
 
-RGBA rgba(ubyte r) {
+RGBA makeRGBA(ubyte r) {
     return RGBA(r, r, r, 255);
 }
 
@@ -466,11 +466,11 @@ RGBA ease(RGBA v, RGBA to, Num weight, EasingFunc f) {
 
 // --- Line procedures
 
-Line line(Num x1, Num y1, Num x2, Num y2) {
+Line makeLine(Num x1, Num y1, Num x2, Num y2) {
     return Line(x1, y1, x2, y2);
 }
 
-Line line(Vec2 a, Vec2 b) {
+Line makeLine(Vec2 a, Vec2 b) {
     return Line(a.x, a.y, b.x, b.y);
 }
 
@@ -512,11 +512,11 @@ Line ease(Line l, Line to, Num weight, EasingFunc f) {
 
 // --- Circ procedures
 
-Circ circ(Num x, Num y, Num r) {
+Circ makeCirc(Num x, Num y, Num r) {
     return Circ(x, y, r);
 }
 
-Circ circ(Vec2 center, Num r) {
+Circ makeCirc(Vec2 center, Num r) {
     return Circ(center.x, center.y, r);
 }
 
@@ -547,15 +547,15 @@ Circ ease(Circ c, Circ to, Num weight, EasingFunc f) {
 
 // --- Rect procedures
 
-Rect rect(Num x, Num y, Num w, Num h) {
+Rect makeRect(Num x, Num y, Num w, Num h) {
     return Rect(x, y, w, h);
 }
 
-Rect rect(Vec2 start, Vec2 size) {
+Rect makeRect(Vec2 start, Vec2 size) {
     return Rect(start.x, start.y, size.x, size.y);
 }
 
-Vec2 size(Rect r) {
+Vec2 makeRect(Rect r) {
     return Vec2(r.w, r.h);
 }
 
@@ -875,11 +875,11 @@ Rect ease(Rect r, Rect to, Num weight, EasingFunc f) {
 
 // --- Vec2 procedures
 
-Vec2 vec2(Num x, Num y) {
+Vec2 makeVec2(Num x, Num y) {
     return Vec2(x, y);
 }
 
-Vec2 vec2(Num x) {
+Vec2 makeVec2(Num x) {
     return Vec2(x, x);
 }
 
@@ -971,11 +971,11 @@ Vec2 ease(Vec2 v, Vec2 to, Num weight, EasingFunc f) {
 
 // --- Vec3 procedures
 
-Vec3 vec3(Num x, Num y, Num z) {
+Vec3 makeVec3(Num x, Num y, Num z) {
     return Vec3(x, y, z);
 }
 
-Vec3 vec3(Num x) {
+Vec3 makeVec3(Num x) {
     return Vec3(x, x, x);
 }
 
@@ -1046,11 +1046,11 @@ Vec3 ease(Vec3 v, Vec3 to, Num weight, EasingFunc f) {
 
 // --- Vec4 procedures
 
-Vec4 vec4(Num x, Num y, Num z, Num w) {
+Vec4 makeVec4(Num x, Num y, Num z, Num w) {
     return Vec4(x, y, z, w);
 }
 
-Vec4 vec4(Num x) {
+Vec4 makeVec4(Num x) {
     return Vec4(x, x, x, x);
 }
 
@@ -1122,10 +1122,10 @@ Vec4 ease(Vec4 v, Vec4 to, Num weight, EasingFunc f) {
 }
 
 unittest {
-    auto r0 = rect(0, 0, 8, 4);
+    auto r0 = Rect(0, 0, 8, 4);
     auto r1 = r0;
     auto r2 = r1.cutSide(Side.right, 4);
 
-    assert(r1.merger(r2) == r0);
-    assert(r1.point(Anchor.centerRight) == vec2(r1.x + r1.w, r1.y + r1.h / 2));
+    assert(merger(r1, r2) == r0);
+    assert(r1.point(Anchor.centerRight) == Vec2(r1.x + r1.w, r1.y + r1.h / 2));
 }

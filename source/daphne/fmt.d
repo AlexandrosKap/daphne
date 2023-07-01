@@ -9,7 +9,7 @@ import daphne.memory;
 nothrow @nogc @trusted:
 
 enum {
-    defaultPrintBufferSize = 256,
+    defaultPrintBufferSize = 512,
 }
 
 void print(T)(T arg) {
@@ -20,11 +20,11 @@ void print(T)(T arg) {
             buffer[arg.length] = '\0';
             io.printf("%s", buffer.ptr);
         } else {
-            char[] buffer = makeArray!char(arg.length + 1);
+            char[] buffer = allocArray!char(arg.length + 1);
             buffer[0 .. arg.length] = arg[0 .. arg.length];
             buffer[$ - 1] = '\0';
             io.printf("%s", buffer.ptr);
-            disposeArray(buffer);
+            freeArray(buffer);
         }
     } else static if (is(T : A[N], A, N) || is(T : A[], A)) {
         if (arg.length == 0) {
@@ -95,18 +95,10 @@ void println(T...)(T args) {
 }
 
 unittest {
-    enum Direction {
-        north,
-        east,
-        south,
-        west,
-    }
-
-    struct Player {
+    struct Position {
         int x, y;
-        Direction lookDir;
     }
 
     println(false, true, 420, 6.9, '-', "UwU");
-    println(Player(1, 2, Direction.east));
+    println(Position(1, 2));
 }

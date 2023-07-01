@@ -50,6 +50,10 @@ bool isIniKeyChar(char c) {
         (c >= '0' && c <= '9');
 }
 
+IniReader makeIniReader(string content, string group = "") {
+    return IniReader(content, group);
+}
+
 IniError readIniPair(ref IniReader r) {
     if (r.content.length == 0) {
         return IniError.eof;
@@ -119,8 +123,8 @@ IniError readIniPair(ref IniReader r) {
 }
 
 unittest {
-    size_t pairCount = 4;
-    string iniFile = `
+    enum pairCount = 4;
+    enum iniFile = `
         # This is my epic player in my epic game.
         [    Player   ]
         name   = Bob
@@ -132,11 +136,11 @@ unittest {
         position = (420, 20)
     `;
 
-    size_t loopCount;
-    auto reader = IniReader(iniFile);
-    while (readIniPair(reader) == IniError.none) {
-        loopCount += 1;
+    auto i = 0;
+    auto reader = makeIniReader(iniFile);
+    while (reader.readIniPair() == IniError.none) {
+        i += 1;
     }
-    assert(loopCount == pairCount);
+    assert(i == pairCount);
     assert(reader.groupPairCounter == 2);
 }

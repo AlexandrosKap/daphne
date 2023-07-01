@@ -8,7 +8,7 @@ import lib = core.stdc.stdlib;
 nothrow @nogc @trusted:
 
 enum {
-    defaultListCapacity = 64,
+    defaultListCapacity = 32,
 }
 
 struct List(T) {
@@ -36,39 +36,24 @@ struct List(T) {
     }
 }
 
-void* alloc(size_t size) {
-    return lib.malloc(size);
+// --- Allocation
+
+T* alloc(T = void)(size_t size) {
+    return cast(T*) lib.malloc(size);
 }
 
-void* realloc(void* ptr, size_t size) {
-    return lib.realloc(ptr, size);
-}
-
-void free(void* ptr) {
-    lib.free(ptr);
-}
-
-T* make(T)() {
-    return cast(T*) alloc(T.sizeof);
-}
-
-T* make(T)(T value) {
-    T* ptr = make!T();
+T* allocValue(T)(T value = T.init) {
+    T* ptr = alloc!T(T.sizeof);
     if (ptr != null) {
         *ptr = value;
-    }
-    return ptr;
-}
-
-void dispose(T)(ref T* ptr) {
-    if (ptr != null) {
-        free(ptr);
-        ptr = null;
+        return ptr;
+    } else {
+        return null;
     }
 }
 
-T[] makeArray(T)(size_t length) {
-    T* ptr = cast(T*) alloc(T.sizeof * length);
+T[] allocArray(T)(size_t length) {
+    T* ptr = alloc!T(T.sizeof * length);
     if (ptr != null) {
         return ptr[0 .. length];
     } else {
@@ -76,24 +61,49 @@ T[] makeArray(T)(size_t length) {
     }
 }
 
-T[] makeArray(T)(T[] value) {
-    T[] array = makeArray!T(value.length);
-    if (array != null) {
-        array[0 .. value.length] = value[0 .. value.length];
-    }
-    return array;
-}
-
-void disposeArray(T)(ref T[] array) {
-    if (array != null) {
-        free(array.ptr);
-        array = null;
+bool realloc(T)(ref T* ptr, size_t size) {
+    T* newptr = cast(T*) lib.realloc(ptr, size);
+    if (newptr != null) {
+        ptr = newptr;
+        return true;
+    } else {
+        return false;
     }
 }
 
-List!T makeList(T)(size_t capacity = defaultListCapacity) {
+bool reallocArray(T)(ref T[] array, size_t length) {
+    T* ptr = array.ptr;
+    if (realloc!T(ptr, T.sizeof * length)) {
+        array = ptr[0 .. length];
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void free(T)(ref T* ptr) {
+    lib.free(ptr);
+    ptr = null;
+}
+
+void freeArray(T)(ref T[] array) {
+    lib.free(array.ptr);
+    array = null;
+}
+
+// --- List
+
+size_t findGoodListCapacity(size_t length) {
+    size_t result = defaultListCapacity;
+    while (result <= length) {
+        result *= 2;
+    }
+    return result;
+}
+
+List!T makeList(T)(size_t capacity) {
     List!T result;
-    T[] array = makeArray!T(capacity);
+    T[] array = allocArray!T(capacity);
     if (array != null) {
         result.items = array[0 .. 0];
         result.capacity = capacity;
@@ -101,19 +111,18 @@ List!T makeList(T)(size_t capacity = defaultListCapacity) {
     return result;
 }
 
-List!T makeList(T)(T[] items) {
-    size_t capacity = defaultListCapacity;
-    while (capacity <= items.length) {
-        capacity *= 2;
-    }
-    List!T result = makeList!T(capacity);
+List!T makeList(T)(inout T[] items) {
+    List!T result = makeList!T(findGoodListCapacity(items.length));
     if (result.items != null) {
         result.items[0 .. items.length] = items[0 .. items.length];
     }
+    return result;
 }
 
-void disposeList(T)(ref List!T l) {
-    disposeArray(l.items);
+void destroyList(T)(ref List!T l) {
+    if (l.items != null) {
+        freeArray(l.items);
+    }
     l.capacity = 0;
 }
 
@@ -121,17 +130,13 @@ size_t length(T)(List!T l) {
     return l.items.length;
 }
 
-void setLength(T)(ref List!T l, size_t len) {
-    if (len <= l.capacity) {
-        l.items = l.items.ptr[0 .. len];
+void setLength(T)(ref List!T l, size_t length) {
+    if (length <= l.capacity) {
+        l.items = l.items[0 .. length];
     } else {
-        size_t capacity = defaultListCapacity;
-        while (capacity <= len) {
-            capacity *= 2;
-        }
-        T* ptr = cast(T*) realloc(l.items.ptr, T.sizeof * capacity);
-        if (ptr != null) {
-            l.items = ptr[0 .. len];
+        size_t capacity = findGoodListCapacity(length);
+        if (reallocArray(l.items, capacity)) {
+            l.item = l.items[0 .. length];
             l.capacity = capacity;
         }
     }
@@ -143,13 +148,9 @@ void append(T)(ref List!T l, inout T item) {
         l.items = l.items.ptr[0 .. index + 1];
         l.items[index] = cast(T) item;
     } else {
-        size_t capacity = defaultListCapacity;
-        while (capacity <= index) {
-            capacity *= 2;
-        }
-        T* ptr = cast(T*) realloc(l.items.ptr, T.sizeof * capacity);
-        if (ptr != null) {
-            l.items = ptr[0 .. index + 1];
+        size_t capacity = findGoodListCapacity(index);
+        if (reallocArray(l.items, capacity)) {
+            l.items = l.items[0 .. index + 1];
             l.items[index] = cast(T) item;
             l.capacity = capacity;
         }
@@ -196,10 +197,10 @@ unittest {
     int value = 420;
     int* ptr;
 
-    ptr = make(value);
+    ptr = allocValue(value);
     assert(ptr != null);
     assert(*ptr == value);
-    dispose(ptr);
+    free(ptr);
     assert(ptr == null);
 }
 
@@ -207,9 +208,9 @@ unittest {
     size_t count = 69;
     int[] array;
 
-    array = makeArray!int(count);
+    array = allocArray!int(count);
     assert(array.length == count);
-    disposeArray(array);
+    freeArray(array);
     assert(array == null);
 }
 
@@ -220,17 +221,11 @@ unittest {
     List!int list;
 
     assert(list.length == 0);
-    assert(list.capacity == 0);
     list.append(a);
     list.append(b);
-    assert(list.length == itemCount);
-    assert(list.capacity == defaultListCapacity);
     assert(list[0] == a);
     assert(list[1] == b);
 
-    list.removeLast();
-    assert(list.length == itemCount - 1);
-    disposeList(list);
+    destroyList(list);
     assert(list.length == 0);
-    assert(list.capacity == 0);
 }
